@@ -1,0 +1,1504 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>App de Estudio</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #fdf8f3;
+    --surface: #fff8f0;
+    --card: #fffaf6;
+    --lilac: #c9b8e8;
+    --lilac-light: #ede5f8;
+    --lilac-mid: #b8a3d8;
+    --rose: #e8c8d4;
+    --rose-light: #f7eef2;
+    --peach: #f2d9c8;
+    --peach-light: #faf0e8;
+    --sage: #c8dcc8;
+    --sage-light: #edf4ed;
+    --sky: #b8d8e8;
+    --sky-light: #e8f4f8;
+    --text: #2a2230;
+    --text-soft: #5a4e6a;
+    --text-muted: #8a7e9a;
+    --border: #e8dff0;
+    --correct: #6db87a;
+    --correct-bg: #eaf6ec;
+    --wrong: #d47a7a;
+    --wrong-bg: #faeaea;
+    --shadow: 0 4px 24px rgba(180,160,210,0.13);
+    --radius: 16px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text);
+    min-height: 100vh;
+    background-image: radial-gradient(ellipse at 10% 20%, rgba(201,184,232,0.18) 0%, transparent 50%),
+                      radial-gradient(ellipse at 90% 80%, rgba(232,200,212,0.18) 0%, transparent 50%);
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: linear-gradient(135deg, #e8dff8 0%, #f5e8f0 50%, #fdf0e8 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 2rem 2rem 1.5rem;
+    text-align: center;
+  }
+  .header-badge {
+    display: inline-block;
+    background: var(--lilac-light);
+    color: var(--text-soft);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 0.3rem 0.9rem;
+    border-radius: 20px;
+    border: 1px solid var(--lilac);
+    margin-bottom: 0.7rem;
+  }
+  header h1 {
+    font-family: 'Lora', serif;
+    font-size: clamp(1.3rem, 3vw, 2rem);
+    font-weight: 700;
+    color: var(--text);
+  }
+  header p { margin-top: 0.4rem; color: var(--text-soft); font-size: 0.88rem; }
+
+  /* ── PROGRESS ── */
+  .progress-wrap {
+    max-width: 860px; margin: 1.2rem auto 0; padding: 0 2rem;
+  }
+  .progress-info {
+    display: flex; justify-content: space-between;
+    font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.35rem;
+  }
+  .progress-bar-bg { background: var(--border); border-radius: 10px; height: 7px; overflow: hidden; }
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--lilac-mid), #c4a0d4);
+    border-radius: 10px; transition: width 0.4s ease; width: 0%;
+  }
+
+  /* ── MAIN ── */
+  main { max-width: 860px; margin: 0 auto; padding: 2rem; }
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* ── START SCREEN ── */
+  .start-title {
+    font-family: 'Lora', serif; font-size: 1.5rem; font-weight: 700;
+    color: var(--text); margin-bottom: 0.5rem; text-align: center;
+  }
+  .start-sub {
+    color: var(--text-soft); font-size: 0.9rem; text-align: center;
+    margin-bottom: 1.8rem; line-height: 1.6;
+  }
+
+  /* Subject cards */
+  .subject-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem; margin-bottom: 1.8rem;
+  }
+  .subject-card {
+    background: var(--card); border: 2px solid var(--border);
+    border-radius: var(--radius); padding: 1.4rem 1.2rem;
+    cursor: pointer; transition: all 0.2s; text-align: center;
+    position: relative;
+  }
+  .subject-card:hover:not(.locked) { border-color: var(--lilac-mid); background: var(--lilac-light); transform: translateY(-2px); }
+  .subject-card.selected { border-color: var(--lilac-mid); background: var(--lilac-light); box-shadow: 0 0 0 3px rgba(184,163,216,0.25); }
+  .subject-card.locked { opacity: 0.55; cursor: not-allowed; }
+  .subject-icon { font-size: 2rem; margin-bottom: 0.6rem; }
+  .subject-name { font-family: 'Lora', serif; font-size: 1rem; font-weight: 600; color: var(--text); margin-bottom: 0.3rem; }
+  .subject-meta { font-size: 0.75rem; color: var(--text-muted); }
+  .lock-badge {
+    position: absolute; top: 0.6rem; right: 0.7rem;
+    background: var(--peach); border: 1px solid #d4b090;
+    color: #7a5030; font-size: 0.65rem; font-weight: 600;
+    padding: 0.2rem 0.5rem; border-radius: 20px;
+  }
+  .coming-badge {
+    display: inline-block; margin-top: 0.4rem;
+    background: var(--peach-light); border: 1px solid var(--peach);
+    color: #8a6040; font-size: 0.7rem; padding: 0.2rem 0.6rem; border-radius: 20px;
+  }
+
+  /* Config panel */
+  .config-panel {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.5rem;
+    box-shadow: var(--shadow);
+  }
+  .config-panel h3 {
+    font-family: 'Lora', serif; font-size: 1rem; color: var(--text);
+    margin-bottom: 1rem;
+  }
+  .config-row { display: flex; align-items: center; gap: 0.8rem; flex-wrap: wrap; margin-bottom: 0.8rem; }
+  .config-label { font-size: 0.85rem; color: var(--text-soft); min-width: 160px; }
+  .count-btns { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+  .count-btn {
+    padding: 0.45rem 1rem; border-radius: 20px; border: 1.5px solid var(--border);
+    background: var(--surface); color: var(--text-soft); font-size: 0.82rem;
+    font-weight: 600; cursor: pointer; transition: all 0.18s;
+  }
+  .count-btn:hover { border-color: var(--lilac-mid); background: var(--lilac-light); }
+  .count-btn.selected { border-color: var(--lilac-mid); background: var(--lilac-light); color: var(--text); }
+
+  .info-row {
+    display: flex; gap: 0.8rem; flex-wrap: wrap; margin-bottom: 1.2rem;
+  }
+  .info-pill {
+    background: var(--lilac-light); border: 1px solid var(--lilac);
+    border-radius: 12px; padding: 0.5rem 1rem;
+    font-size: 0.82rem; color: var(--text-soft);
+  }
+  .info-pill strong { color: var(--text); }
+
+  /* ── BUTTONS ── */
+  .btn {
+    padding: 0.7rem 1.6rem; border-radius: 30px;
+    font-family: 'DM Sans', sans-serif; font-size: 0.88rem;
+    font-weight: 600; cursor: pointer; border: none; transition: all 0.2s;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--lilac-mid), #c4a0d4);
+    color: #fff; box-shadow: 0 3px 12px rgba(180,150,215,0.3);
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 5px 18px rgba(180,150,215,0.4); }
+  .btn-secondary {
+    background: var(--surface); color: var(--text-soft);
+    border: 1.5px solid var(--border);
+  }
+  .btn-secondary:hover { background: var(--lilac-light); border-color: var(--lilac); }
+  .btn:disabled { opacity: 0.4; cursor: default; transform: none !important; }
+  .btn-center { display: flex; justify-content: center; }
+
+  /* ── DOTS ── */
+  .dots-wrap {
+    display: flex; flex-wrap: wrap; gap: 0.4rem;
+    justify-content: center; max-width: 860px;
+    margin: 0 auto 1.1rem; padding: 0 2rem;
+  }
+  .dot {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--border); border: none; cursor: pointer;
+    font-size: 0.6rem; font-weight: 600; color: var(--text-muted);
+    transition: all 0.2s; display: flex; align-items: center; justify-content: center;
+  }
+  .dot.current { background: var(--lilac-mid); color: #fff; transform: scale(1.2); }
+  .dot.answered-c { background: var(--correct); color: #fff; }
+  .dot.answered-w { background: var(--wrong); color: #fff; }
+
+  /* ── QUESTION CARD ── */
+  .q-card {
+    background: var(--card); border-radius: var(--radius);
+    border: 1px solid var(--border); box-shadow: var(--shadow);
+    padding: 2rem 2.2rem; margin-bottom: 1.5rem;
+    animation: fadeUp 0.3s ease;
+  }
+  @keyframes fadeUp {
+    from { opacity:0; transform:translateY(12px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+  .q-meta { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 1rem; flex-wrap: wrap; }
+  .q-num {
+    background: var(--lilac-light); color: var(--text-soft);
+    font-size: 0.7rem; font-weight: 600; letter-spacing: 0.08em;
+    padding: 0.22rem 0.65rem; border-radius: 20px; border: 1px solid var(--lilac);
+  }
+  .q-unit {
+    font-size: 0.7rem; color: var(--text-muted);
+    background: var(--peach-light); border: 1px solid var(--peach);
+    padding: 0.22rem 0.65rem; border-radius: 20px;
+  }
+  .q-profe {
+    font-size: 0.68rem; background: #fff0e8; border: 1px solid #e8c8a0;
+    color: #8a5820; padding: 0.22rem 0.65rem; border-radius: 20px;
+  }
+  .q-diff { font-size: 0.7rem; margin-left: auto; padding: 0.22rem 0.65rem; border-radius: 20px; }
+  .q-diff.easy   { background:#edf4ed; border:1px solid var(--sage); color:#4a7c50; }
+  .q-diff.medium { background:var(--peach-light); border:1px solid var(--peach); color:#8a5a30; }
+  .q-diff.hard   { background:var(--rose-light); border:1px solid var(--rose); color:#8a3a5a; }
+
+  .q-text {
+    font-family: 'Lora', serif; font-size: 1.03rem;
+    line-height: 1.6; color: var(--text); margin-bottom: 1.3rem;
+  }
+  .case-box {
+    background: var(--lilac-light); border-left: 3px solid var(--lilac-mid);
+    border-radius: 8px; padding: 0.85rem 1rem; margin-bottom: 1.1rem;
+    font-size: 0.87rem; color: var(--text-soft); line-height: 1.55; font-style: italic;
+  }
+
+  /* OPTIONS */
+  .options { display: flex; flex-direction: column; gap: 0.6rem; }
+  .opt-btn {
+    display: flex; align-items: flex-start; gap: 0.75rem;
+    background: var(--surface); border: 1.5px solid var(--border);
+    border-radius: 12px; padding: 0.8rem 1rem; cursor: pointer;
+    font-family: 'DM Sans', sans-serif; font-size: 0.9rem;
+    color: var(--text); text-align: left; transition: all 0.18s; line-height: 1.45;
+  }
+  .opt-btn:hover:not(:disabled) { border-color: var(--lilac-mid); background: var(--lilac-light); transform: translateX(3px); }
+  .opt-letter {
+    min-width: 25px; height: 25px; border-radius: 50%;
+    background: var(--border); color: var(--text-soft);
+    font-size: 0.75rem; font-weight: 600;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s; flex-shrink: 0; margin-top: 1px;
+  }
+  .opt-btn.correct { border-color: var(--correct); background: var(--correct-bg); }
+  .opt-btn.correct .opt-letter { background: var(--correct); color: #fff; }
+  .opt-btn.wrong   { border-color: var(--wrong); background: var(--wrong-bg); }
+  .opt-btn.wrong   .opt-letter { background: var(--wrong); color: #fff; }
+  .opt-btn:disabled { cursor: default; }
+
+  .feedback {
+    margin-top: 1rem; border-radius: 10px; padding: 0.85rem 1rem;
+    font-size: 0.87rem; line-height: 1.55; display: none;
+  }
+  .feedback.show { display: block; }
+  .feedback.correct-fb { background: var(--correct-bg); border: 1px solid #b8ddbf; color: #2d6b3a; }
+  .feedback.wrong-fb   { background: var(--wrong-bg); border: 1px solid #ddb8b8; color: #6b2d2d; }
+  .feedback strong { display: block; margin-bottom: 0.25rem; }
+
+  /* NAV */
+  .nav-row { display: flex; justify-content: flex-end; gap: 0.8rem; margin-top: 1.1rem; }
+
+  /* ── RESULTS ── */
+  .result-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius); box-shadow: var(--shadow);
+    padding: 2.5rem; text-align: center; margin-bottom: 1.5rem;
+  }
+  .result-grade {
+    font-family: 'Lora', serif; font-size: 5rem; font-weight: 700; line-height: 1;
+    background: linear-gradient(135deg, #b090d0, #d090b8);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+  .result-label { font-size: 0.83rem; color: var(--text-muted); margin-top: 0.3rem; margin-bottom: 1.1rem; }
+  .result-msg { font-family: 'Lora', serif; font-size: 1.15rem; color: var(--text); margin-bottom: 1.4rem; }
+  .result-grid {
+    display: grid; grid-template-columns: repeat(3,1fr); gap: 1rem;
+    max-width: 400px; margin: 0 auto 1.8rem;
+  }
+  .result-stat { background: var(--lilac-light); border: 1px solid var(--lilac); border-radius: 12px; padding: 0.8rem 0.5rem; }
+  .result-stat .rs-val { font-size: 1.5rem; font-weight: 700; color: var(--text); }
+  .result-stat .rs-lbl { font-size: 0.7rem; color: var(--text-muted); margin-top: 0.2rem; }
+  .result-btns { display: flex; gap: 0.8rem; justify-content: center; flex-wrap: wrap; }
+
+  .review-section { margin-top: 1.5rem; }
+  .review-section h3 { font-family: 'Lora', serif; font-size: 1.1rem; margin-bottom: 1rem; color: var(--text); }
+  .review-item {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 1.1rem 1.3rem; margin-bottom: 0.85rem;
+    border-left: 4px solid var(--border);
+  }
+  .review-item.r-correct { border-left-color: var(--correct); }
+  .review-item.r-wrong   { border-left-color: var(--wrong); }
+  .review-q   { font-size: 0.88rem; font-weight: 600; margin-bottom: 0.4rem; color: var(--text); }
+  .review-ans { font-size: 0.82rem; color: var(--text-soft); margin-bottom: 0.25rem; }
+  .review-exp { font-size: 0.8rem; color: var(--text-muted); font-style: italic; line-height: 1.5; }
+
+  @media(max-width:600px){
+    main { padding: 1rem; }
+    .q-card { padding: 1.3rem 1.1rem; }
+    .result-grade { font-size: 3.5rem; }
+    header { padding: 1.3rem 1rem 1rem; }
+    .config-row { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-badge">App de Estudio · Valeska Ugarte</div>
+  <h1>Cuestionarios de Estudio</h1>
+  <p>Selecciona asignatura, cantidad de preguntas y comienza</p>
+  <div class="progress-wrap">
+    <div class="progress-info">
+      <span id="prog-label">—</span>
+      <span id="prog-pct">—</span>
+    </div>
+    <div class="progress-bar-bg"><div class="progress-bar-fill" id="prog-fill"></div></div>
+  </div>
+</header>
+
+<main>
+
+  <!-- ══════════════════════════════ START ══════════════════════════════ -->
+  <div class="screen active" id="screen-start">
+    <p class="start-title">¿Qué quieres estudiar hoy?</p>
+    <p class="start-sub">Las preguntas del profe siempre aparecen primero; se mezcla aleatoriamente.<br>Las opciones de cada pregunta también se mezclan.</p>
+
+    <!-- Subject selector -->
+    <div class="subject-grid" id="subject-grid">
+      <div class="subject-card selected" id="card-seg" onclick="selectSubject('seg')">
+        <div class="subject-icon">🔐</div>
+        <div class="subject-name">Seguridad de la Información</div>
+        <div class="subject-meta">Prueba 1 · 67 preguntas</div>
+      </div>
+      <div class="subject-card" id="card-so" onclick="selectSubject('so')">
+        <span class="lock-badge">📥</span>
+        <div class="subject-icon">🌐</div>
+        <div class="subject-name">Sistemas Operativos</div>
+        <div class="subject-meta">Prueba 1 · Subnetting</div>
+        <div><span class="coming-badge">Material de Clases - 79 Preguntas</span></div>
+      </div>
+      <div class="subject-card" id="card-examen" onclick="selectSubject('examen')">
+        <div class="subject-icon">📝</div>
+        <div class="subject-name">Fundamentos de Seguridad de la Información</div>
+        <div class="subject-meta">Cuestionario Examen Final · 55 preguntas</div>
+      </div>
+    </div>
+
+    <!-- Config panel -->
+    <div class="config-panel">
+      <h3>Configuración de sesión</h3>
+      <div class="config-row">
+        <span class="config-label">Número de preguntas:</span>
+        <div class="count-btns" id="count-btns">
+          <button class="count-btn" onclick="setCount(10)">10</button>
+          <button class="count-btn" onclick="setCount(20)">20</button>
+          <button class="count-btn" onclick="setCount(30)">30</button>
+          <button class="count-btn selected" onclick="setCount(999)">Todas</button>
+        </div>
+      </div>
+      <div class="config-row">
+        <span class="config-label">Orden:</span>
+        <span style="font-size:0.85rem;color:var(--text-soft);">🎓 Preguntas del profe primero · 🔀 Aleatorio · 🔤 Opciones mezcladas</span>
+      </div>
+    </div>
+
+    <div class="info-row" id="info-row">
+      <div class="info-pill">📝 <strong id="info-q">60</strong> preguntas</div>
+      <div class="info-pill">🎓 <strong>incluye</strong> cuestionario del profe</div>
+      <div class="info-pill">⭐ Escala 1.0 – 7.0</div>
+    </div>
+
+    <div class="btn-center">
+      <button class="btn btn-primary" onclick="startQuiz()">Comenzar sesión →</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════ QUIZ ══════════════════════════════ -->
+  <div class="screen" id="screen-quiz">
+    <div class="dots-wrap" id="dots-container"></div>
+    <div id="question-area"></div>
+    <div class="nav-row">
+      <button class="btn btn-secondary" id="btn-prev" onclick="prevQ()">← Anterior</button>
+      <button class="btn btn-primary"   id="btn-next" onclick="nextQ()" disabled>Siguiente →</button>
+      <button class="btn btn-primary"   id="btn-finish" onclick="finishQuiz()" style="display:none">Ver resultado ✓</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════ RESULTS ══════════════════════════════ -->
+  <div class="screen" id="screen-result">
+    <div class="result-card">
+      <div class="result-grade" id="res-grade">–</div>
+      <div class="result-label">Nota Final · Escala 1.0 – 7.0</div>
+      <div class="result-msg" id="res-msg"></div>
+      <div class="result-grid">
+        <div class="result-stat"><div class="rs-val" id="res-correct">0</div><div class="rs-lbl">Correctas</div></div>
+        <div class="result-stat"><div class="rs-val" id="res-wrong">0</div><div class="rs-lbl">Incorrectas</div></div>
+        <div class="result-stat"><div class="rs-val" id="res-pct">0%</div><div class="rs-lbl">Porcentaje</div></div>
+      </div>
+      <div class="result-btns">
+        <button class="btn btn-primary"   onclick="restartSame()">Repetir misma config</button>
+        <button class="btn btn-secondary" onclick="goHome()">Volver al inicio</button>
+      </div>
+    </div>
+    <div class="review-section" id="review-area"></div>
+  </div>
+
+</main>
+
+<script>
+// ══════════════════════════════════════════════════════════
+// BANCO DE PREGUNTAS
+// profe: true  →  aparece siempre primero (sin mezclar entre sí)
+// ══════════════════════════════════════════════════════════
+const BANK = {
+  seg: [
+    // ==================== PREGUNTAS DEL PROFE (profe: true) ====================
+    // 1. Triada de la Seguridad
+    {profe:true, unit:"Unidad 1", diff:"easy",
+     q:"¿Cuál es el objetivo principal de la Triada de la Seguridad de la Información?",
+     opts:["Proteger contra ataques de malware exclusivamente","Garantizar la confidencialidad, integridad y disponibilidad de la información","Implementar controles de acceso físicos","Detectar vulnerabilidades en sistemas"],
+     ans:1, exp:"El objetivo principal de la Triada de la Seguridad es garantizar la Confidencialidad, Integridad y Disponibilidad (CIA) de la información en todo momento. Estos tres pilares trabajan en conjunto para proteger los datos de accesos no autorizados, modificaciones indebidas y pérdidas de acceso."},
+
+    // 2. Confidencialidad
+    {profe:true, unit:"Unidad 1", diff:"easy",
+     q:"¿Qué representa la confidencialidad en la Triada de la Seguridad?",
+     opts:["Garantizar que los datos estén siempre disponibles","Proteger los datos contra accesos no autorizados","Asegurar que los datos no sean modificados sin autorización","Monitorear continuamente el sistema"],
+     ans:1, exp:"La confidencialidad asegura que la información sea accesible únicamente para personas, procesos o sistemas debidamente autorizados. Se implementa mediante cifrado (AES), controles de acceso, autenticación y clasificación de la información. Ejemplo: registros médicos solo accesibles por personal autorizado."},
+
+    // 3. Integridad
+    {profe:true, unit:"Unidad 1", diff:"easy",
+     q:"¿Qué describe mejor la integridad en la Triada de la Seguridad?",
+     opts:["Garantizar que la información esté siempre disponible","Proteger contra accesos no autorizados","Asegurar que los datos no sean modificados sin autorización","Configurar sistemas redundantes"],
+     ans:2, exp:"La integridad garantiza que los datos sean exactos, completos y no hayan sido alterados de forma no autorizada. Se implementa mediante algoritmos de hash (SHA-256), firmas digitales y registros de auditoría."},
+
+    // 4. ISO 27001
+    {profe:true, unit:"Unidad 1", diff:"medium",
+     q:"Características de la norma ISO 27001.",
+     opts:["Solo regula contraseñas y accesos físicos","Marco internacional para gestión de seguridad de la información: gestión de riesgos, control de accesos y auditorías regulares de mejora continua","Se aplica exclusivamente a empresas financieras","Es una norma opcional sin valor certificable"],
+     ans:1, exp:"ISO 27001:2022 es la norma internacional para SGSI. Establece requisitos para implementar, mantener y mejorar un Sistema de Gestión de Seguridad de la Información. Incluye gestión de riesgos, control de accesos, auditorías regulares y ciclo PDCA. Es certificable y aplica a cualquier organización."},
+
+    // 5. Disponibilidad (práctica crítica)
+    {profe:true, unit:"Unidad 1", diff:"easy",
+     q:"¿Cuál es una práctica crítica para garantizar la disponibilidad en la seguridad de la información?",
+     opts:["Limitar el acceso a usuarios específicos","Utilizar contraseñas complejas","Realizar copias de seguridad regulares","Configurar firewalls avanzados"],
+     ans:2, exp:"La práctica más crítica es realizar copias de seguridad (backups) regulares almacenadas en ubicaciones separadas. Complementariamente se usan sistemas redundantes, balanceadores de carga, planes de Disaster Recovery y protecciones contra ataques DDoS."},
+
+    // 6. Diferencia seguridad informática vs seguridad de la información
+    {profe:true, unit:"Unidad 1", diff:"medium",
+     q:"¿Qué diferencia clave existe entre seguridad informática y seguridad de la información?",
+     opts:["Son sinónimos completamente intercambiables","La seguridad informática es parte de la seguridad de la información y se enfoca en sistemas tecnológicos","La seguridad de la información solo protege redes corporativas","La seguridad informática abarca políticas y comportamientos humanos"],
+     ans:1, exp:"La seguridad informática es una subcategoría que protege hardware, software y redes. La seguridad de la información es más amplia e incluye políticas, procesos, comportamiento humano y datos en cualquier formato."},
+
+    // 7. Nessus
+    {profe:true, unit:"Unidad 3", diff:"medium",
+     q:"Características de la herramienta Nessus.",
+     opts:["Framework de pentesting con exploits personalizables","Escáner de vulnerabilidades que detecta configuraciones erróneas, software desactualizado y proporciona informes detallados para gestión de riesgos","Herramienta exclusiva para aplicaciones web","Sistema de monitoreo de redes en tiempo real"],
+     ans:1, exp:"Nessus es un escáner de vulnerabilidades profesional. Detecta configuraciones erróneas, software desactualizado, genera informes con severidad CVSS, permite escanear múltiples sistemas y es ideal para auditorías de seguridad."},
+
+    // 8. Listas blancas CIS Controls
+    {profe:true, unit:"Unidad 1", diff:"medium",
+     q:"Explique el uso de listas blancas para aplicaciones sugerido por los CIS Controls.",
+     opts:["Permiten ejecutar cualquier software en la red corporativa","Limitan la ejecución de software solo a aplicaciones previamente autorizadas, reduciendo la superficie de ataque (deny by default)","Bloquean el tráfico web no cifrado","Lista de IPs permitidas para acceder al sistema"],
+     ans:1, exp:"Las listas blancas (whitelisting) definen aplicaciones explícitamente autorizadas. Invierten la lógica: solo permiten lo bueno conocido, bloqueando malware y software no autorizado. Reducen drásticamente la superficie de ataque."},
+
+    // 9. Ventaja ISO 27001
+    {profe:true, unit:"Unidad 1", diff:"easy",
+     q:"¿Qué ventaja clave tiene la implementación de ISO 27001?",
+     opts:["Incrementa el valor de los activos físicos","Facilita la gestión de riesgos en la información","Mejora la productividad del personal directamente","Garantiza la integridad física de los servidores"],
+     ans:1, exp:"La ventaja clave es facilitar la gestión integral de riesgos. Además genera confianza ante clientes, ayuda al cumplimiento normativo, estandariza procesos, promueve mejora continua y reduce incidentes de seguridad."},
+
+    // 10. Monitoreo CIS Controls
+    {profe:true, unit:"Unidad 1", diff:"easy",
+     q:"¿Qué tipo de monitoreo es recomendado por los CIS Controls?",
+     opts:["Monitoreo periódico mensual","Monitoreo continuo en tiempo real","Revisiones trimestrales manuales","Supervisión semestral"],
+     ans:1, exp:"Los CIS Controls recomiendan monitoreo continuo en tiempo real, permitiendo detectar amenazas e incidentes al momento de ocurrir. Se implementa mediante SIEM que correlaciona eventos de múltiples fuentes."},
+
+    // 11. Disponibilidad
+    {profe:true, unit:"Unidad 1", diff:"easy",
+     q:"¿Qué representa la disponibilidad en la Triada de la Seguridad?",
+     opts:["Limitar el acceso a usuarios específicos","Asegurar que la información esté accesible cuando sea necesario","Proteger datos de accesos no autorizados","Monitorear redes en tiempo real"],
+     ans:1, exp:"La disponibilidad garantiza que información y sistemas estén accesibles cuando los usuarios autorizados los necesiten. Se protege con backups, sistemas redundantes, Disaster Recovery y protecciones contra DDoS."},
+
+    // 12. Activo de información ISO 27001
+    {profe:true, unit:"Unidad 1", diff:"medium",
+     q:"¿Qué es un activo de información según la ISO 27001?",
+     opts:["Únicamente los equipos físicos de la organización","Cualquier elemento con valor para la organización que requiere protección: datos, hardware, software, personas y procesos","Solo las bases de datos de clientes","Exclusivamente sistemas conectados a internet"],
+     ans:1, exp:"Un activo de información es cualquier elemento con valor para la organización que debe protegerse: datos digitales, hardware, software, recursos humanos, infraestructura física y servicios. El primer paso del SGSI es identificar y clasificar estos activos."},
+
+    // 13. Defensa en profundidad
+    {profe:true, unit:"Unidad 1", diff:"medium",
+     q:"¿Qué describe el principio de defensa en profundidad?",
+     opts:["Usar un solo firewall muy potente en el perímetro","Implementar múltiples capas de controles de seguridad, de modo que si una falla, las otras continúan protegiendo","Cifrar todos los datos con AES-256","Monitorear solo el tráfico externo"],
+     ans:1, exp:"La defensa en profundidad implementa múltiples capas de controles independientes. Si una capa falla, las siguientes siguen protegiendo. Ejemplo: firewall, segmentación de red, MFA, cifrado, SIEM y backups trabajando juntos."},
+
+    // 14. Firewall
+    {profe:true, unit:"Unidad 1", diff:"easy",
+     q:"¿Qué objetivo tiene un firewall en una red?",
+     opts:["Cifrar las comunicaciones de correo electrónico","Controlar y filtrar el tráfico de red entrante y saliente según reglas definidas","Detectar intrusos dentro de la red interna","Escanear vulnerabilidades en servidores"],
+     ans:1, exp:"El firewall filtra tráfico según reglas predefinidas (IP, puerto, protocolo). Actúa como primera barrera perimetral, impidiendo tráfico no autorizado. Debe complementarse con IDS, SIEM y MFA."},
+
+    // 15. Evaluación de riesgos
+    {profe:true, unit:"Unidad 1", diff:"medium",
+     q:"¿Qué se debe considerar al evaluar riesgos en un sistema?",
+     opts:["Solo la probabilidad de ocurrencia del incidente","La probabilidad de ocurrencia y el impacto potencial de cada amenaza sobre los activos","El costo de los equipos físicos únicamente","El número de usuarios del sistema"],
+     ans:1, exp:"La evaluación de riesgos considera: identificación de activos, amenazas, vulnerabilidades, probabilidad e impacto. La fórmula Riesgo = Probabilidad × Impacto permite priorizar y decidir tratamiento."},
+
+    // 16. GDPR
+    {profe:true, unit:"Unidad 2", diff:"medium",
+     q:"¿Qué representa el estándar GDPR?",
+     opts:["Norma chilena de protección de datos","Reglamento europeo de protección de datos personales; aplica a organizaciones que traten datos de ciudadanos de la UE, incluso fuera de Europa","Solo aplica a empresas europeas con sede en la UE","Es equivalente a la Ley 19.628 chilena"],
+     ans:1, exp:"GDPR es el marco legal de la UE para protección de datos personales. Aplica a cualquier organización que maneje datos de ciudadanos europeos. Establece derechos del titular, obliga a reportar brechas en 72 horas y multas hasta 20M€ o 4% facturación."},
+
+    // 17. Contraseñas débiles
+    {profe:true, unit:"Unidad 1", diff:"easy",
+     q:"¿Qué práctica ayuda a reducir el riesgo de ataques por contraseñas débiles?",
+     opts:["Usar la misma contraseña para todos los sistemas","Implementar políticas de contraseñas fuertes: longitud mínima, caracteres especiales y rotación periódica","Compartir contraseñas en archivos de texto cifrados","Usar solo números en las contraseñas"],
+     ans:1, exp:"Las prácticas efectivas son: contraseñas largas y complejas, cambio periódico, gestores de contraseñas, y sobre todo autenticación multifactor (MFA) que añade segunda capa de verificación."},
+     
+    // 18. Políticas de contraseñas y MFA
+    {profe:true, unit:"Unidad 1", diff:"medium",
+     q:"Explique la implementación de políticas de contraseñas seguras y autenticación multifactor (MFA).",
+     opts:["MFA solo se usa en redes externas","Las políticas definen requisitos mínimos de complejidad; MFA añade segunda capa de verificación combinando algo que sabes, tienes o eres","La MFA reemplaza completamente las contraseñas","Solo se aplican a usuarios administradores"],
+     ans:1, exp:"Las políticas de contraseñas definen longitud mínima (12+), caracteres mixtos, cambio periódico. MFA añade factores independientes: algo que sabes (contraseña), algo que tienes (token) y algo que eres (biometría). Combinación crítica para accesos remotos y sistemas sensibles."},
+
+    // 19. NIST CSF
+    {profe:true, unit:"Unidad 2", diff:"medium",
+     q:"¿Qué enfoque utiliza el estándar NIST CSF para gestionar riesgos?",
+     opts:["Enfoque legal y punitivo con multas","Marco de cinco funciones cíclicas: Identificar, Proteger, Detectar, Responder y Recuperar","Sistema de certificación obligatorio","Solo aplica a agencias del gobierno de EE.UU."],
+     ans:1, exp:"NIST CSF usa 5 funciones: Identificar (activos y riesgos), Proteger (salvaguardas), Detectar (eventos), Responder (contención) y Recuperar (restauración). Marco flexible, basado en riesgos y mejora continua."},
+
+    // 20. Gestión de parches
+    {profe:true, unit:"Unidad 2", diff:"easy",
+     q:"¿Qué asegura la gestión de parches en un sistema?",
+     opts:["Que las contraseñas se cambien periódicamente","Que las vulnerabilidades conocidas sean corregidas oportunamente mediante actualizaciones de software","Que los firewalls estén correctamente configurados","Que los empleados sean capacitados en seguridad"],
+     ans:1, exp:"La gestión de parches asegura que sistemas estén actualizados con correcciones de seguridad. Muchos ataques (como WannaCry) explotaron vulnerabilidades con parches disponibles pero no aplicados. Es control esencial en CIS Controls."},
+
+    // 21. SIEM
+    {profe:true, unit:"Unidad 2", diff:"medium",
+     q:"Características de la herramienta SIEM (Gestión de información y eventos de seguridad).",
+     opts:["Solo sirve para escanear vulnerabilidades","Consolida registros de múltiples fuentes, correlaciona eventos para detectar patrones sospechosos y genera alertas en tiempo real","Reemplaza a los firewalls tradicionales","Solo funciona en entornos cloud"],
+     ans:1, exp:"SIEM centraliza logs de múltiples fuentes, correlaciona eventos para identificar patrones sospechosos, genera alertas en tiempo real y facilita auditorías forenses. Es ejemplo de monitoreo continuo recomendado por CIS Controls."},
+
+    // 22. Segmentación de redes
+    {profe:true, unit:"Unidad 2", diff:"medium",
+     q:"¿Qué beneficio clave ofrece la segmentación de redes?",
+     opts:["Aumenta la velocidad de la conexión a internet","Limita el movimiento lateral de un atacante dentro de la red, conteniendo el alcance de una brecha","Elimina la necesidad de usar firewalls","Simplifica la gestión de contraseñas"],
+     ans:1, exp:"La segmentación divide la red en zonas aisladas (VLANs, firewalls internos). Si un segmento es comprometido, el atacante no puede moverse lateralmente a otros, conteniendo el daño de una brecha."},
+
+    // 23. Ciberseguridad contexto organizacional
+    {profe:true, unit:"Unidad 2", diff:"medium",
+     q:"¿Qué representa la ciberseguridad en el contexto organizacional?",
+     opts:["Solo la instalación de antivirus en equipos de escritorio","El conjunto de prácticas, tecnologías y procesos para proteger sistemas, redes y datos contra ataques digitales garantizando continuidad operativa","Exclusivamente la protección del perímetro de red","Un departamento técnico sin relación con la estrategia de negocio"],
+     ans:1, exp:"La ciberseguridad organizacional integra tecnologías, procesos, políticas y prácticas para proteger activos digitales. Involucra cultura organizacional, capacitación, cumplimiento normativo, gestión de riesgos y continuidad del negocio."},
+
+    // 24. MFA características
+    {profe:true, unit:"Unidad 2", diff:"medium",
+     q:"Características de la autenticación multifactor (MFA).",
+     opts:["Solo requiere usuario y contraseña","Combina dos o más factores independientes: algo que sabes (contraseña), algo que tienes (token/celular) o algo que eres (biometría)","Solo se usa en accesos remotos","Reemplaza completamente las contraseñas"],
+     ans:1, exp:"MFA combina factores independientes: algo que sabes, algo que tienes, algo que eres. Reduce drásticamente acceso no autorizado incluso si la contraseña es robada. Recomendado para accesos remotos y sistemas críticos."},
+
+    // 25. AES
+    {profe:true, unit:"Unidad 1", diff:"medium",
+     q:"Características de AES (Advanced Encryption Standard).",
+     opts:["Cifrado asimétrico con clave pública y privada","Cifrado simétrico con claves de 128, 192 o 256 bits; rápido, eficiente y resistente a ataques de fuerza bruta; estándar mundial para datos sensibles","Cifrado exclusivo para comunicaciones HTTPS","Solo cifra datos en reposo"],
+     ans:1, exp:"AES es cifrado simétrico con claves 128/192/256 bits. Es rápido, eficiente, resistente a fuerza bruta. Estándar adoptado por gobiernos, bancos y servicios cloud para cifrar comunicaciones y datos almacenados."},
+
+    // 26. Phishing
+    {profe:true, unit:"Unidad 2", diff:"easy",
+     q:"¿Qué es un ataque de phishing?",
+     opts:["Ataque que explota vulnerabilidades de software directamente","Intento de engañar a personas para que revelen información confidencial suplantando entidades de confianza mediante correos o sitios falsos","Tipo de malware que cifra archivos","Ataque de denegación de servicio distribuido"],
+     ans:1, exp:"Phishing es ingeniería social: atacante suplanta entidad confiable para obtener credenciales o datos. Se ejecuta mediante correos falsos, smishing o vishing. Explota confianza humana, no vulnerabilidades técnicas."},
+
+    // 27. Protocolos HTTP, HTTPS, FTP, SMTP
+    {profe:true, unit:"Unidad 2", diff:"medium",
+     q:"Características de los protocolos HTTP, HTTPS, FTP y SMTP.",
+     opts:["Todos son protocolos de cifrado para datos sensibles","HTTP (web sin cifrar, puerto 80), HTTPS (web con SSL/TLS, puerto 443), FTP (transferencia de archivos, puerto 21), SMTP (envío de correo, puerto 25/587)","Son todos protocolos de capa de red (capa 3)","FTP y SMTP solo funcionan en redes locales"],
+     ans:1, exp:"HTTP: web sin cifrar (puerto 80). HTTPS: HTTP con TLS/SSL (puerto 443, seguro). FTP: transferencia archivos (puerto 21, inseguro). SMTP: envío correo (puerto 25/587). HTTPS, SFTP y STARTTLS son versiones seguras."},
+
+    // 28. Acceso no autorizado
+    {profe:true, unit:"Unidad 2", diff:"easy",
+     q:"¿Qué acción es crucial para evitar el acceso no autorizado a un sistema?",
+     opts:["Instalar el software más reciente sin configuración adicional","Implementar control de acceso basado en roles y autenticación multifactor","Aumentar el ancho de banda de la red","Realizar backups semanales"],
+     ans:1, exp:"La acción más crucial es MFA combinada con gestión de identidades basada en mínimo privilegio. Complementar con contraseñas fuertes, monitoreo con SIEM, segmentación de red y políticas de bloqueo tras intentos fallidos."},
+
+    // 29. Análisis de riesgos (amenazas y vulnerabilidades)
+    {profe:true, unit:"Unidad 2", diff:"medium",
+     q:"¿Qué técnica de análisis de riesgos considera tanto amenazas como vulnerabilidades?",
+     opts:["Análisis de brecha (Gap Analysis)","Análisis FODA (SWOT)","Análisis de amenazas y vulnerabilidades (Threat & Vulnerability Assessment)","Análisis de impacto de negocio (BIA)"],
+     ans:2, exp:"El análisis de amenazas y vulnerabilidades evalúa amenazas (eventos externos) y vulnerabilidades (debilidades internas). Se expresa como Riesgo = Probabilidad × Impacto y se visualiza en Matriz de Riesgos para priorizar."},
+
+    // 30. ISO 27005
+    {profe:true, unit:"Unidad 2", diff:"hard",
+     q:"Características de la norma ISO 27005.",
+     opts:["Idéntica a ISO 27001 pero más actualizada","Estándar específico para gestión de riesgos de seguridad de la información, complementando a ISO 27001 con metodología detallada de evaluación y tratamiento de riesgos","Regula exclusivamente el cifrado de datos sensibles","Norma para auditorías externas de ciberseguridad"],
+     ans:1, exp:"ISO 27005 complementa ISO 27001 con guía detallada para gestión de riesgos. Define proceso iterativo: contexto, identificación, análisis, evaluación y tratamiento. Opciones de tratamiento: mitigar, transferir, aceptar o evitar."},
+
+    // 31. Ransomware
+    {profe:true, unit:"Unidad 2", diff:"medium",
+     q:"¿Qué es un ransomware y qué medida es más efectiva contra estos ataques?",
+     opts:["Software espía; contrarrestado con antivirus","Malware que cifra los archivos de la víctima y exige pago para recuperarlos; la medida más efectiva es mantener copias de seguridad aisladas y actualizadas","Ataque de denegación de servicio; contrarrestado con firewalls","Virus que roba contraseñas; contrarrestado con MFA"],
+     ans:1, exp:"Ransomware cifra archivos y exige rescate. La medida más efectiva son copias de seguridad aisladas (offline) que permiten restaurar sin pagar. Complementar con actualizaciones, EDR, capacitación y segmentación."},
+
+    // 32. Principio de mínimo privilegio
+    {profe:true, unit:"Unidad 2", diff:"medium",
+     q:"¿Qué principio básico de ciberseguridad prioriza la reducción del acceso a lo estrictamente necesario?",
+     opts:["Principio de defensa en profundidad","Principio de mínimo privilegio (Least Privilege)","Principio de segregación de funciones","Principio de no repudio"],
+     ans:1, exp:"El principio de mínimo privilegio establece que cada usuario o proceso debe tener acceso solo a los recursos estrictamente necesarios para su función. Reduce superficie de ataque: si una cuenta es comprometida, el daño es limitado."},
+
+    // ── PREGUNTAS ADICIONALES (profe:false) ────────────────
+    {profe:false, unit:"Unidad 1", diff:"medium",
+     q:"Explique la implementación de políticas de contraseñas seguras y autenticación multifactor (MFA).",
+     opts:["MFA solo se usa en redes externas","Las políticas definen requisitos mínimos de complejidad; MFA añade segunda capa de verificación combinando algo que sabes, tienes o eres","La MFA reemplaza completamente las contraseñas","Solo se aplican a usuarios administradores"],
+     ans:1, exp:"Las políticas de contraseñas definen longitud, complejidad y rotación. MFA exige al menos dos factores independientes. Juntas son una de las medidas de mayor impacto contra accesos no autorizados."},
+    {profe:false, unit:"Unidad 2", diff:"medium",
+     q:"¿Qué enfoque utiliza el estándar NIST CSF para gestionar riesgos?",
+     opts:["Enfoque legal y punitivo con multas","Marco de cinco funciones cíclicas: Identificar, Proteger, Detectar, Responder y Recuperar","Sistema de certificación obligatorio","Solo aplica a agencias del gobierno de EE.UU."],
+     ans:1, exp:"El NIST CSF organiza la ciberseguridad en 5 funciones: Identificar (activos y riesgos), Proteger (salvaguardas), Detectar (eventos), Responder (contención) y Recuperar (restauración). Voluntario pero ampliamente adoptado."},
+    {profe:false, unit:"Unidad 2", diff:"easy",
+     q:"¿Qué asegura la gestión de parches en un sistema?",
+     opts:["Que las contraseñas se cambien periódicamente","Que las vulnerabilidades conocidas sean corregidas oportunamente mediante actualizaciones de software","Que los firewalls estén correctamente configurados","Que los empleados sean capacitados en seguridad"],
+     ans:1, exp:"La gestión de parches es crítica: los atacantes explotan vulnerabilidades conocidas para las que ya existen parches. Mantener sistemas actualizados es una de las medidas de mayor impacto."},
+    {profe:false, unit:"Unidad 2", diff:"medium",
+     q:"Características de la herramienta SIEM (Gestión de información y eventos de seguridad).",
+     opts:["Solo sirve para escanear vulnerabilidades","Consolida registros de múltiples fuentes, correlaciona eventos para detectar patrones sospechosos y genera alertas en tiempo real","Reemplaza a los firewalls tradicionales","Solo funciona en entornos cloud"],
+     ans:1, exp:"Un SIEM centraliza logs de distintos sistemas, aplica correlación de eventos para identificar amenazas complejas y genera alertas. Esencial para el monitoreo continuo en organizaciones con infraestructura compleja."},
+    {profe:false, unit:"Unidad 2", diff:"medium",
+     q:"¿Qué beneficio clave ofrece la segmentación de redes?",
+     opts:["Aumenta la velocidad de la conexión a internet","Limita el movimiento lateral de un atacante dentro de la red, conteniendo el alcance de una brecha","Elimina la necesidad de usar firewalls","Simplifica la gestión de contraseñas"],
+     ans:1, exp:"La segmentación divide la red en zonas aisladas. Si un atacante compromete un segmento, no puede moverse libremente a otros, reduciendo el impacto de una brecha."},
+    {profe:false, unit:"Unidad 2", diff:"medium",
+     q:"¿Qué representa la ciberseguridad en el contexto organizacional?",
+     opts:["Solo la instalación de antivirus en equipos de escritorio","El conjunto de prácticas, tecnologías y procesos para proteger sistemas, redes y datos contra ataques digitales garantizando continuidad operativa","Exclusivamente la protección del perímetro de red","Un departamento técnico sin relación con la estrategia de negocio"],
+     ans:1, exp:"La ciberseguridad es transversal: involucra tecnología, procesos y personas. Su objetivo es proteger activos de información para garantizar la continuidad del negocio y el cumplimiento regulatorio."},
+    {profe:false, unit:"Unidad 2", diff:"medium",
+     q:"Características de la autenticación multifactor (MFA).",
+     opts:["Solo requiere usuario y contraseña","Combina dos o más factores independientes: algo que sabes (contraseña), algo que tienes (token/celular) o algo que eres (biometría)","Solo se usa en accesos remotos","Reemplaza completamente las contraseñas"],
+     ans:1, exp:"MFA aumenta la seguridad al requerir múltiples evidencias de identidad. Aunque una contraseña sea robada, sin el segundo factor el atacante no puede acceder. Es una de las medidas de mayor impacto."},
+    {profe:false, unit:"Unidad 1", diff:"medium",
+     q:"Características de AES (Advanced Encryption Standard).",
+     opts:["Cifrado asimétrico con clave pública y privada","Cifrado simétrico con claves de 128, 192 o 256 bits; rápido, eficiente y resistente a ataques de fuerza bruta; estándar mundial para datos sensibles","Cifrado exclusivo para comunicaciones HTTPS","Solo cifra datos en reposo"],
+     ans:1, exp:"AES es el estándar de cifrado simétrico más utilizado mundialmente. Misma clave para cifrar y descifrar, tamaños de 128/192/256 bits. Eficiente en hardware moderno y resistente a ataques conocidos."},
+    {profe:false, unit:"Unidad 2", diff:"easy",
+     q:"¿Qué es un ataque de phishing?",
+     opts:["Ataque que explota vulnerabilidades de software directamente","Intento de engañar a personas para que revelen información confidencial suplantando entidades de confianza mediante correos o sitios falsos","Tipo de malware que cifra archivos","Ataque de denegación de servicio distribuido"],
+     ans:1, exp:"El phishing usa ingeniería social y suplantación de identidad para obtener credenciales, datos financieros u otra información sensible. Es el vector de ataque más común y efectivo actualmente."},
+    {profe:false, unit:"Unidad 2", diff:"medium",
+     q:"Características de los protocolos HTTP, HTTPS, FTP y SMTP.",
+     opts:["Todos son protocolos de cifrado para datos sensibles","HTTP (web sin cifrar, puerto 80), HTTPS (web con SSL/TLS, puerto 443), FTP (transferencia de archivos, puerto 21), SMTP (envío de correo, puerto 25/587)","Son todos protocolos de capa de red (capa 3)","FTP y SMTP solo funcionan en redes locales"],
+     ans:1, exp:"HTTP: web sin cifrar (puerto 80). HTTPS: HTTP con SSL/TLS (puerto 443, seguro). FTP: transferencia de archivos (puerto 21, no cifrado por defecto). SMTP: envío de correo electrónico (puerto 25/587)."},
+    {profe:false, unit:"Unidad 2", diff:"easy",
+     q:"¿Qué acción es crucial para evitar el acceso no autorizado a un sistema?",
+     opts:["Instalar el software más reciente sin configuración adicional","Implementar control de acceso basado en roles y autenticación multifactor","Aumentar el ancho de banda de la red","Realizar backups semanales"],
+     ans:1, exp:"El control de acceso con principio de mínimo privilegio y MFA son las medidas más efectivas contra accesos no autorizados. Solo quien necesita acceso debe tenerlo, con múltiples factores de verificación."},
+    {profe:false, unit:"Unidad 2", diff:"medium",
+     q:"¿Qué técnica de análisis de riesgos considera tanto amenazas como vulnerabilidades?",
+     opts:["Análisis de brecha (Gap Analysis)","Análisis FODA (SWOT)","Análisis de amenazas y vulnerabilidades (Threat & Vulnerability Assessment)","Análisis de impacto de negocio (BIA)"],
+     ans:2, exp:"El análisis de amenazas y vulnerabilidades evalúa qué actores maliciosos existen (amenazas) y qué debilidades explotables tiene el sistema (vulnerabilidades), para calcular el riesgo real de cada combinación."},
+    {profe:false, unit:"Unidad 2", diff:"hard",
+     q:"Características de la norma ISO 27005.",
+     opts:["Idéntica a ISO 27001 pero más actualizada","Estándar específico para gestión de riesgos de seguridad de la información, complementando a ISO 27001 con metodología detallada de evaluación y tratamiento de riesgos","Regula exclusivamente el cifrado de datos sensibles","Norma para auditorías externas de ciberseguridad"],
+     ans:1, exp:"ISO 27005 provee la metodología detallada de gestión de riesgos que complementa a ISO 27001. Define cómo identificar, analizar, evaluar y tratar riesgos de seguridad de la información de manera estructurada."},
+    {profe:false, unit:"Unidad 2", diff:"medium",
+     q:"¿Qué es un ransomware y qué medida es más efectiva contra estos ataques?",
+     opts:["Software espía; contrarrestado con antivirus","Malware que cifra los archivos de la víctima y exige pago para recuperarlos; la medida más efectiva es mantener copias de seguridad aisladas y actualizadas","Ataque de denegación de servicio; contrarrestado con firewalls","Virus que roba contraseñas; contrarrestado con MFA"],
+     ans:1, exp:"El ransomware cifra archivos y exige rescate. Las copias de seguridad aisladas (offline o inmutables) permiten restaurar sin pagar. Complementar con parches, MFA y segmentación reduce la probabilidad de infección."},
+    {profe:false, unit:"Unidad 2", diff:"medium",
+     q:"¿Qué principio básico de ciberseguridad prioriza la reducción del acceso a lo estrictamente necesario?",
+     opts:["Principio de defensa en profundidad","Principio de mínimo privilegio (Least Privilege)","Principio de segregación de funciones","Principio de no repudio"],
+     ans:1, exp:"El principio de mínimo privilegio dicta que cada usuario, proceso o sistema debe tener solo los permisos necesarios para cumplir su función. Reduce el impacto si una cuenta es comprometida."},
+    {profe:false, unit:"Unidad 2", diff:"hard",
+     q:"¿Cuáles son las diferencias principales entre la Ley 19.223 y la Ley 21.459 de Chile?",
+     opts:["Son idénticas, solo cambia el número","Ley 19.223 (1993): primeros delitos informáticos en Chile; Ley 21.459 (2022): moderniza la legislación alineándola con el Convenio de Budapest, introduce nuevos delitos y aumenta penas","La 21.459 derogó la 19.223 sin reemplazarla","19.223 regula datos personales y 21.459 regula delitos informáticos"],
+     ans:1, exp:"Ley 19.223 (1993) fue la primera ley de delitos informáticos en Chile. Ley 21.459 (2022) la moderniza, se alinea con el Convenio de Budapest e introduce delitos como distribución de malware con penas más severas."},
+    {profe:false, unit:"Unidad 2", diff:"medium",
+     q:"¿Qué establece el Convenio de Budapest sobre Ciberdelincuencia?",
+     opts:["Regula el comercio electrónico entre países europeos","Armoniza leyes sobre delitos informáticos y facilita la cooperación internacional en investigaciones de ciberdelincuencia transnacional","Establece estándares de cifrado obligatorios para comunicaciones gubernamentales","Define estándares de privacidad para redes sociales"],
+     ans:1, exp:"El Convenio de Budapest es el primer tratado internacional sobre cibercriminalidad. Establece estándares comunes para tipificar delitos y facilita el intercambio de información entre países en investigaciones."},
+    {profe:false, unit:"Unidad 2", diff:"medium",
+     q:"¿Cuáles son los principios clave de la Ley 19.628 de protección de datos personales en Chile?",
+     opts:["Solo regula datos médicos y financieros","Establece principios de consentimiento, finalidad y seguridad en el tratamiento de datos personales","Aplica solo a empresas con más de 100 empleados","Define exclusivamente sanciones penales para robo de datos"],
+     ans:1, exp:"La Ley 19.628 establece que los datos personales solo pueden tratarse con consentimiento del titular, para el propósito declarado y con medidas de seguridad adecuadas. Está en proceso de modernización hacia estándares GDPR."},
+    {profe:false, unit:"Unidad 2", diff:"medium",
+     q:"¿Cuáles son los requisitos clave del estándar PCI DSS?",
+     opts:["Solo requiere cambiar contraseñas regularmente","Exige cifrado de datos de tarjetas, monitoreo continuo de redes de pago y controles de acceso estrictos para proteger información de tarjetas de pago","Es voluntario y sin consecuencias por incumplimiento","Solo aplica a bancos emisores de tarjetas"],
+     ans:1, exp:"PCI DSS es obligatorio para organizaciones que procesen pagos con tarjeta. Requiere: cifrado en tránsito y almacenamiento, control de acceso, monitoreo de redes y pruebas regulares de seguridad."},
+    {profe:false, unit:"Unidad 3", diff:"easy",
+     q:"¿Qué función del NIST CSF incluye la identificación de activos críticos?",
+     opts:["Proteger","Identificar","Responder","Recuperar"],
+     ans:1, exp:"La función 'Identificar' del NIST CSF se enfoca en comprender el contexto organizacional, los activos de información y los riesgos. Es el punto de partida de cualquier programa de ciberseguridad."},
+    {profe:false, unit:"Unidad 3", diff:"easy",
+     q:"¿Qué representa un puntaje CVSS alto en una vulnerabilidad?",
+     opts:["Bajo riesgo de explotación, puede ignorarse","Mayor criticidad y urgencia para resolverla inmediatamente","Vulnerabilidad fácilmente mitigable","Riesgo solo en entornos específicos"],
+     ans:1, exp:"CVSS puntúa de 0 a 10. Un 9.0-10.0 es Crítico, 7.0-8.9 es Alto. Cuanto mayor el puntaje, mayor la severidad y urgencia de aplicar parches o medidas de mitigación."},
+    {profe:false, unit:"Unidad 3", diff:"medium",
+     q:"¿Cuál es la utilidad principal de una matriz de riesgos?",
+     opts:["Automatizar el cifrado de datos","Priorizar amenazas en función de su impacto y probabilidad para focalizar recursos de mitigación","Identificar solo vulnerabilidades de software","Generar reportes automáticos de auditoría"],
+     ans:1, exp:"La matriz de riesgos visualiza y prioriza amenazas combinando probabilidad e impacto. Permite enfocarse en riesgos críticos y altos primero, optimizando los recursos de seguridad disponibles."},
+    {profe:false, unit:"Unidad 3", diff:"medium",
+     q:"¿Qué componente del CVSS evalúa el impacto según el entorno específico de la organización?",
+     opts:["Base Score","Temporal Score","Environmental Score","Adaptative Score"],
+     ans:2, exp:"El Environmental Score ajusta la severidad de una vulnerabilidad según el contexto organizacional: si el sistema afectado es crítico, el puntaje puede ser mayor que el Base Score genérico."},
+    {profe:false, unit:"Unidad 3", diff:"medium",
+     q:"¿Cuál es una medida clave en un plan de Disaster Recovery (DR)?",
+     opts:["Actualizaciones semestrales de software","Implementar sistemas redundantes y copias de seguridad para garantizar continuidad operativa","Incrementar únicamente la capacitación del personal","Reducir el tiempo de conexión a internet"],
+     ans:1, exp:"Un plan de DR efectivo incluye: sistemas redundantes (failover), copias de seguridad actualizadas, procedimientos documentados y pruebas periódicas para verificar que el plan funciona."},
+    {profe:false, unit:"Unidad 3", diff:"medium",
+     q:"¿Qué indica un riesgo clasificado como 'crítico' en una matriz de riesgos?",
+     opts:["Tiene bajo impacto pero alta probabilidad","Alta probabilidad de ocurrencia y alto impacto potencial; requiere atención y acción inmediatas","Es fácilmente mitigable con controles básicos","Solo afecta procesos secundarios de la organización"],
+     ans:1, exp:"Un riesgo crítico combina alta probabilidad + alto impacto. En la matriz aparece en el cuadrante superior derecho (valores 12-16). Requiere acción inmediata y planes de contingencia robustos."},
+    {profe:false, unit:"Unidad 3", diff:"medium",
+     q:"¿Cuál es la fórmula básica para calcular el nivel de riesgo?",
+     opts:["Riesgo = Amenaza ÷ Vulnerabilidad","Riesgo = Probabilidad × Impacto","Riesgo = Impacto + Mitigación","Riesgo = Vulnerabilidad × Severidad"],
+     ans:1, exp:"Riesgo = Probabilidad × Impacto permite comparar y priorizar riesgos. Un evento de alta probabilidad y alto impacto (ej: ransomware en servidor crítico) recibe mayor prioridad."},
+    {profe:false, unit:"Unidad 3", diff:"medium",
+     q:"¿Cuáles son las cuatro estrategias para tratar un riesgo identificado?",
+     opts:["Ignorar, reportar, escalar, documentar","Mitigar, transferir, aceptar y evitar/eliminar","Solo mitigar o aceptar","Cifrar, respaldar, monitorear, parchear"],
+     ans:1, exp:"Las cuatro estrategias son: MITIGAR (reducir probabilidad/impacto), TRANSFERIR (seguros, outsourcing), ACEPTAR (riesgo bajo o costo mayor al impacto) y EVITAR (eliminar la actividad que genera el riesgo)."},
+    {profe:false, unit:"Unidad 3", diff:"medium",
+     q:"¿Qué herramientas se especializan en evaluación de seguridad de aplicaciones web?",
+     opts:["Nessus y OpenVAS únicamente","Burp Suite, OWASP ZAP y Nikto, especializadas en detectar vulnerabilidades web como inyección SQL, XSS y configuraciones inseguras","Solo Metasploit Framework","Wireshark y TCPDump"],
+     ans:1, exp:"Para aplicaciones web: Burp Suite (profesional, intercepta tráfico HTTP), OWASP ZAP (open source, amigable), Nikto (configuraciones inseguras en servidores). Detectan vulnerabilidades OWASP Top 10."},
+    {profe:false, unit:"Unidad 3", diff:"medium",
+     q:"¿Qué es Metasploit y para qué se utiliza?",
+     opts:["Sistema de monitoreo de redes en tiempo real","Framework de pentesting que permite simular ataques controlados para identificar vulnerabilidades mediante un amplio catálogo de exploits","Escáner pasivo de vulnerabilidades sin interacción activa","Sistema de gestión de parches automatizado"],
+     ans:1, exp:"Metasploit es el framework de pentesting más utilizado. Permite simular ataques reales usando exploits conocidos para verificar si las vulnerabilidades son explotables, ayudando a priorizar parches."},
+    {profe:false, unit:"Unidad 3", diff:"easy",
+     q:"¿Qué aspecto evalúa el Base Score de CVSS?",
+     opts:["Factores ambientales y organizacionales","Las características intrínsecas de la vulnerabilidad independientes del contexto y del tiempo","El tiempo necesario para que un parche esté disponible","El nivel de criticidad después de aplicar mitigaciones"],
+     ans:1, exp:"El Base Score evalúa características permanentes: vector de ataque, complejidad, privilegios requeridos, impacto en CIA. No cambia con el tiempo ni con el contexto organizacional."},
+    {profe:false, unit:"Unidad 3", diff:"medium",
+     q:"¿Cuáles son las etapas de una evaluación de vulnerabilidades?",
+     opts:["Solo escaneo y reporte","Planificación, descubrimiento, análisis, evaluación y reporte","Instalación de herramientas, escaneo y parches","Entrevistas, pruebas y certificación"],
+     ans:1, exp:"Las 5 etapas son: Planificación (alcance), Descubrimiento (activos), Análisis (escanear vulnerabilidades), Evaluación (calificar severidad y riesgo) y Reporte (documentar y presentar resultados)."},
+    {profe:false, unit:"Unidad 1", diff:"easy",
+     q:"¿Qué herramienta ayuda a identificar actividades sospechosas en una red?",
+     opts:["Antivirus tradicional","IDS (Intrusion Detection System)","Cifrado AES","Certificado SSL"],
+     ans:1, exp:"Un IDS monitorea el tráfico de red buscando patrones sospechosos o firmas de ataque conocidas. A diferencia del IPS, solo detecta y alerta, no bloquea automáticamente."},
+    {profe:false, unit:"Unidad 2", diff:"medium",
+     q:"¿Qué establece la nueva Ley Marco sobre Ciberseguridad e Infraestructura Crítica de Chile (2024)?",
+     opts:["Solo actualiza las penas de la Ley 19.223","Crea la Agencia Nacional de Ciberseguridad (ANCI) y establece obligaciones de ciberseguridad para operadores de servicios esenciales","Reemplaza completamente todas las leyes informáticas anteriores","Solo aplica a entidades del gobierno central"],
+     ans:1, exp:"La Ley Marco de Ciberseguridad (2024) crea la ANCI como organismo regulador y establece obligaciones para operadores de infraestructuras críticas (energía, agua, telecomunicaciones, banca)."},
+    {profe:false, unit:"Unidad 3", diff:"hard",
+     case:"Una empresa de retail detecta que un empleado accedió a información de tarjetas de crédito sin autorización, modificó registros de compras y el sistema estuvo caído 4 horas.",
+     q:"¿Cuáles pilares de la triada CIA se vieron comprometidos y qué controles preventivos habrían mitigado el incidente?",
+     opts:["Solo la disponibilidad; bastaría con un mejor antivirus","Los tres pilares: confidencialidad (acceso no autorizado), integridad (modificación de datos) y disponibilidad (sistema caído); controles: mínimo privilegio, logs de auditoría, DLP y MFA","Solo la integridad y disponibilidad","No hay controles preventivos aplicables a amenazas internas"],
+     ans:1, exp:"Caso de amenaza interna (insider threat). Vulnera CONFIDENCIALIDAD (acceso no autorizado a tarjetas), INTEGRIDAD (modificación de registros) y DISPONIBILIDAD (4 horas de caída). Controles: mínimo privilegio, logs de auditoría de usuarios privilegiados, DLP y MFA."},
+    {profe:false, unit:"Unidad 2", diff:"hard",
+     case:"En 2018, el Banco de Chile sufrió un ataque donde los cibercriminales distrajeron al equipo TI con un virus en sucursales mientras realizaban transferencias SWIFT fraudulentas por USD 10 millones.",
+     q:"¿Qué normativas aplican y qué controles habrían mitigado el ataque?",
+     opts:["Solo aplica la Ley 19.223; bastaría con un mejor antivirus","Aplican Ley 19.223/21.459 y PCI DSS; controles clave: SIEM en tiempo real, segmentación de red, MFA para transacciones SWIFT y protocolos de verificación adicional para transferencias internacionales de alto valor","Solo aplica PCI DSS; bastaría con cifrado de datos","No hay normativas chilenas aplicables"],
+     ans:1, exp:"Viola Ley 19.223 (acceso no autorizado y fraude) y PCI DSS (institución financiera). Controles críticos faltantes: SIEM para detectar anomalías en tiempo real, MFA en sistema SWIFT, segregación de redes entre sucursales y sistema SWIFT, y verificación adicional en transferencias de alto valor."},
+  ],
+
+  // ══════════════════════════════════════════
+  // PLACEHOLDER: Sistemas Operativos / Subnetting IPv4
+  // (agrega las preguntas aquí cuando tengas el material)
+  // ══════════════════════════════════════════
+  so: [
+    // ==================== SUBNETTING BÁSICO ====================
+    {profe:false, unit:"Subnetting Básico", diff:"easy", q:"¿Qué es el subneteo (subnetting) de redes?", opts:["Unir varias redes en una sola","Dividir una red grande en subredes más pequeñas para mejorar el rendimiento y la administración","Asignar direcciones IP dinámicas a los hosts","Encriptar el tráfico de red"], ans:1, exp:"Subnetting es la subdivisión de una red IP física en subredes lógicas más pequeñas, facilitando la administración, mejorando el rendimiento y controlando el tráfico de broadcast."},
+    {profe:false, unit:"Subnetting Básico", diff:"easy", q:"¿Cuál de los siguientes es un beneficio del subneteo?", opts:["Aumentar el número total de direcciones IPv4 disponibles","Contener el tráfico de broadcast dentro de la subred","Eliminar la necesidad de routers","Aumentar la latencia de la red"], ans:1, exp:"El subneteo reduce el tráfico de broadcast al limitarlo a la subred, mejorando el rendimiento general de la red."},
+    {profe:false, unit:"Subnetting Básico", diff:"easy", q:"¿Qué dispositivo es necesario para que dispositivos en diferentes subredes puedan comunicarse?", opts:["Switch","Router","Hub","Bridge"], ans:1, exp:"Se necesita un router (o gateway) para que los dispositivos en diferentes redes o subredes puedan comunicarse entre sí."},
+    {profe:false, unit:"Subnetting Básico", diff:"easy", q:"¿Cuántos bits tiene una dirección IPv4?", opts:["16 bits","32 bits","64 bits","128 bits"], ans:1, exp:"Una dirección IPv4 está compuesta por 32 bits, normalmente representados en formato decimal punteado."},
+    {profe:false, unit:"Subnetting Básico", diff:"easy", q:"¿Qué es una máscara de subred?", opts:["Una contraseña para acceder a la red","Un número que indica qué parte de la IP es red y qué parte es host","Un tipo de cable de red","Un protocolo de enrutamiento"], ans:1, exp:"La máscara de subred determina qué bits de la dirección IP pertenecen a la red y cuáles a los hosts."},
+    
+    // ==================== CÁLCULO DE SUBREDES ====================
+    {profe:false, unit:"Cálculo de Subredes", diff:"medium", q:"Dada la dirección IP 192.168.1.0/24, ¿cuántos bits se deben 'robar' de la porción de host para obtener al menos 5 subredes útiles?", opts:["2 bits","3 bits","4 bits","5 bits"], ans:1, exp:"Aplicando 2^n - 2 >= 5, n debe ser 3, ya que 2^3 - 2 = 6 >= 5. Se roban 3 bits."},
+    {profe:false, unit:"Cálculo de Subredes", diff:"medium", q:"¿Cuál es la fórmula para calcular el número de subredes útiles dado n bits prestados?", opts:["2^n","2^n - 2","2^n + 2","n^2"], ans:1, exp:"La cantidad de subredes útiles se calcula como 2^n - 2, donde n es el número de bits tomados prestados de la porción de host."},
+    {profe:false, unit:"Cálculo de Subredes", diff:"medium", q:"¿Cuál es la fórmula para calcular el número de hosts útiles por subred?", opts:["2^m","2^m - 2","2^m + 2","m^2"], ans:1, exp:"Hosts útiles = 2^m - 2, donde m es el número de bits restantes para hosts. Se restan la dirección de red y broadcast."},
+    {profe:false, unit:"Cálculo de Subredes", diff:"medium", q:"¿Qué dirección se reserva como broadcast en una subred?", opts:["La primera dirección de la subred","La última dirección de la subred","La dirección del gateway","Cualquier dirección dentro de la subred"], ans:1, exp:"En cada subred, la primera dirección identifica la red y la última dirección es el broadcast de esa subred."},
+    {profe:false, unit:"Cálculo de Subredes", diff:"medium", q:"¿Qué dirección se reserva como red en una subred?", opts:["La primera dirección de la subred","La última dirección de la subred","La dirección del gateway","Cualquier dirección dentro de la subred"], ans:0, exp:"La primera dirección de cada subred identifica la red y no puede ser asignada a ningún host."},
+    
+    // ==================== MÁSCARAS Y NOTACIÓN CIDR ====================
+    {profe:false, unit:"Máscaras y CIDR", diff:"medium", q:"Una dirección Clase C tiene por defecto máscara 255.255.255.0 (/24). Si se toman prestados 3 bits para subneteo, ¿cuál es la nueva máscara de red?", opts:["255.255.255.224 (/27)","255.255.255.240 (/28)","255.255.255.192 (/26)","255.255.255.248 (/29)"], ans:0, exp:"3 bits encendidos en el último octeto: 11100000 = 224. Nueva máscara 255.255.255.224 (/27)."},
+    {profe:false, unit:"Máscaras y CIDR", diff:"medium", q:"¿Qué máscara corresponde a la notación /24?", opts:["255.255.0.0","255.255.255.0","255.0.0.0","255.255.255.255"], ans:1, exp:"/24 significa 24 bits de red, máscara 255.255.255.0 (tres octetos completos)."},
+    {profe:false, unit:"Máscaras y CIDR", diff:"medium", q:"¿Qué máscara corresponde a la notación /16?", opts:["255.255.0.0","255.255.255.0","255.0.0.0","255.255.255.255"], ans:0, exp:"/16 significa 16 bits de red, máscara 255.255.0.0."},
+    {profe:false, unit:"Máscaras y CIDR", diff:"medium", q:"¿Qué máscara corresponde a la notación /8?", opts:["255.255.0.0","255.255.255.0","255.0.0.0","255.255.255.255"], ans:2, exp:"/8 significa 8 bits de red, máscara 255.0.0.0."},
+    {profe:false, unit:"Máscaras y CIDR", diff:"medium", q:"¿Qué máscara corresponde a la notación /28?", opts:["255.255.255.192","255.255.255.224","255.255.255.240","255.255.255.248"], ans:2, exp:"/28 = 255.255.255.240 (11110000)."},
+    {profe:false, unit:"Máscaras y CIDR", diff:"medium", q:"¿Qué máscara corresponde a la notación /29?", opts:["255.255.255.192","255.255.255.224","255.255.255.240","255.255.255.248"], ans:3, exp:"/29 = 255.255.255.248 (11111000)."},
+    {profe:false, unit:"Máscaras y CIDR", diff:"medium", q:"¿Qué máscara corresponde a la notación /30?", opts:["255.255.255.252","255.255.255.248","255.255.255.240","255.255.255.224"], ans:0, exp:"/30 = 255.255.255.252 (11111100). Se usa comúnmente en enlaces punto a punto."},
+    
+    // ==================== BLOCKSIZE Y SALTOS ====================
+    {profe:false, unit:"Blocksize", diff:"medium", q:"Para una dirección Clase C con máscara 255.255.255.224, ¿cuál es el valor del bloque (blocksize) o salto entre subredes?", opts:["16","32","64","128"], ans:1, exp:"Blocksize = 256 - 224 = 32. Cada subred avanza de 32 en 32 en el último octeto."},
+    {profe:false, unit:"Blocksize", diff:"medium", q:"Para una máscara 255.255.255.240, ¿cuál es el blocksize?", opts:["8","16","32","64"], ans:1, exp:"256 - 240 = 16. Las subredes saltan de 16 en 16."},
+    {profe:false, unit:"Blocksize", diff:"medium", q:"Para una máscara 255.255.255.248, ¿cuál es el blocksize?", opts:["4","6","8","12"], ans:2, exp:"256 - 248 = 8. Las subredes saltan de 8 en 8."},
+    {profe:false, unit:"Blocksize", diff:"medium", q:"Para una máscara 255.255.255.192, ¿cuál es el blocksize?", opts:["32","64","128","16"], ans:1, exp:"256 - 192 = 64. Las subredes saltan de 64 en 64."},
+    
+    // ==================== HOSTS POR SUBRED ====================
+    {profe:false, unit:"Hosts por Subred", diff:"medium", q:"Con una máscara /27 (255.255.255.224) en una red Clase C, ¿cuántos hosts útiles hay por subred?", opts:["30","14","62","6"], ans:0, exp:"Quedan 5 bits para hosts (2^5 = 32). Hosts útiles: 32 - 2 = 30 (se resta red y broadcast)."},
+    {profe:false, unit:"Hosts por Subred", diff:"medium", q:"Si una red Clase C se subneteó con máscara 255.255.255.248 (/29), ¿cuántos hosts útiles hay por subred?", opts:["8","6","4","2"], ans:1, exp:"Máscara /29 deja 3 bits para hosts (2^3=8). Hosts útiles: 8-2=6."},
+    {profe:false, unit:"Hosts por Subred", diff:"medium", q:"Con máscara /28, ¿cuántos hosts útiles por subred?", opts:["16","14","12","10"], ans:1, exp:"/28 deja 4 bits para hosts (2^4=16). Hosts útiles: 16-2=14."},
+    {profe:false, unit:"Hosts por Subred", diff:"medium", q:"Con máscara /26, ¿cuántos hosts útiles por subred?", opts:["64","62","60","58"], ans:1, exp:"/26 deja 6 bits para hosts (2^6=64). Hosts útiles: 64-2=62."},
+    {profe:false, unit:"Hosts por Subred", diff:"hard", q:"Con máscara /22 en una red Clase B, ¿cuántos hosts útiles por subred?", opts:["1022","2046","4094","8190"], ans:0, exp:"/22 deja 10 bits para hosts (2^10=1024). Hosts útiles: 1024-2=1022."},
+    
+    // ==================== EJERCICIOS CLASE A (del PPT) ====================
+    {profe:false, unit:"Clase A", diff:"hard", q:"De la dirección IP 111.189.23.155/8, se necesitan 200 subredes. ¿Cuántos bits se toman prestados y cuál es la nueva máscara?", opts:["6 bits, /14","7 bits, /15","8 bits, /16","9 bits, /17"], ans:2, exp:"2^8 = 256 >= 200. Se toman 8 bits. Máscara original /8, nueva /16 = 255.255.0.0."},
+    {profe:false, unit:"Clase A", diff:"hard", q:"De la dirección IP 96.100.12.33/8, se necesitan 1987 subredes. ¿Cuántos bits se toman prestados?", opts:["8 bits","9 bits","10 bits","11 bits"], ans:3, exp:"2^11 = 2048 >= 1987. Se toman 11 bits, nueva máscara /19."},
+    {profe:false, unit:"Clase A", diff:"hard", q:"De la dirección IP 10.0.0.0/8, se necesitan 500 subredes. ¿Cuántos bits se toman?", opts:["8","9","10","11"], ans:1, exp:"2^9 = 512 >= 500. Se toman 9 bits, máscara /17 = 255.255.128.0."},
+    {profe:false, unit:"Clase A", diff:"hard", q:"La tienda Zara necesita 6 subredes a partir de la IP 95.168.12.1/8. ¿Cuál es la nueva máscara?", opts:["/9 (255.128.0.0)","/10 (255.192.0.0)","/11 (255.224.0.0)","/12 (255.240.0.0)"], ans:2, exp:"2^3 = 8 >= 6. Se toman 3 bits. Máscara /11 = 255.224.0.0. Blocksize = 256-224 = 32."},
+    {profe:false, unit:"Clase A", diff:"hard", q:"Con la dirección 15.254.3.77/8, se necesitan 19 subredes útiles. ¿Cuántos bits se toman?", opts:["3","4","5","6"], ans:1, exp:"2^4 -2 = 14 (<19), 2^5 -2 = 30 (>=19). Se toman 5 bits, máscara /13."},
+    
+    // ==================== EJERCICIOS CLASE B (del PPT) ====================
+    {profe:false, unit:"Clase B", diff:"hard", q:"De la dirección IP 165.0.21.98/16, se necesitan 128 subredes. ¿Cuántos bits se toman?", opts:["6 bits","7 bits","8 bits","9 bits"], ans:1, exp:"2^7 = 128. Se toman 7 bits, nueva máscara /23 = 255.255.254.0."},
+    {profe:false, unit:"Clase B", diff:"hard", case:"La empresa Holfmann necesita conectar oficina central en Santiago y sucursales en Concepción, Antofagasta, Valdivia y Osorno (5 LANs). También tiene 4 enlaces WAN.", q:"Con la dirección IP 174.18.0.0/16, ¿cuál es la nueva máscara para obtener todas las subredes necesarias?", opts:["/18 (255.255.192.0)","/19 (255.255.224.0)","/20 (255.255.240.0)","/21 (255.255.248.0)"], ans:2, exp:"Se necesitan 9 redes lógicas (5 LAN + 4 WAN). 2^4 = 16 >= 9. Se toman 4 bits, máscara /20 = 255.255.240.0. Cada subred tiene 4094 hosts."},
+    {profe:false, unit:"Clase B", diff:"hard", q:"Con la dirección IP 172.16.0.0/16, se necesitan 50 subredes. ¿Cuál es la nueva máscara?", opts:["/21 (255.255.248.0)","/22 (255.255.252.0)","/23 (255.255.254.0)","/24 (255.255.255.0)"], ans:1, exp:"2^6 = 64 >= 50. Se toman 6 bits. Nueva máscara /22 = 255.255.252.0."},
+    {profe:false, unit:"Clase B", diff:"hard", q:"Con la dirección IP 130.246.33.109/16, se necesitan 8 subredes útiles. ¿Cuántos bits se toman?", opts:["2","3","4","5"], ans:2, exp:"2^4 -2 = 14 >= 8. Se toman 4 bits, máscara /20 = 255.255.240.0."},
+    
+    // ==================== EJERCICIOS CLASE C (del PPT) ====================
+    {profe:false, unit:"Clase C", diff:"medium", q:"De la dirección IP 192.168.25.200/24, se necesitan 7 subredes útiles. ¿Cuántos bits se toman?", opts:["2","3","4","5"], ans:2, exp:"2^4 -2 = 14 >= 7. Se toman 4 bits, máscara /28 = 255.255.255.240, blocksize 16."},
+    {profe:false, unit:"Clase C", diff:"medium", q:"De la dirección IP 202.180.15.0/24, se necesitan 5 subredes útiles. ¿Cuál es la nueva máscara?", opts:["/26 (255.255.255.192)","/27 (255.255.255.224)","/28 (255.255.255.240)","/29 (255.255.255.248)"], ans:1, exp:"2^3 -2 = 6 >= 5. Se toman 3 bits, máscara /27 = 255.255.255.224, blocksize 32."},
+    {profe:false, unit:"Clase C", diff:"medium", q:"De la dirección IP 195.13.83.180/24, se necesitan 257 subredes. ¿Esto es posible?", opts:["Sí, tomando 8 bits","Sí, tomando 9 bits","No, máximo 256 subredes en Clase C","No, máximo 254 subredes"], ans:2, exp:"En Clase C solo hay 8 bits disponibles para subnetear. Máximo 2^8 = 256 subredes totales. 257 no es posible."},
+    {profe:false, unit:"Clase C", diff:"medium", q:"Con la dirección IP 196.189.40.4/24, se necesitan 129 subredes. ¿Es posible?", opts:["Sí, tomando 7 bits","Sí, tomando 8 bits","No, máximo 128 subredes útiles","No, máximo 254 subredes totales"], ans:2, exp:"2^7 = 128 subredes totales. 129 > 128, no es posible en Clase C."},
+    {profe:false, unit:"Clase C", diff:"medium", q:"Con la dirección IP 211.189.40.4/24, se necesitan 257 subredes. ¿Es posible?", opts:["Sí","No","Depende de la máscara","Solo si es Clase B"], ans:1, exp:"No es posible porque el máximo de subredes en Clase C es 256 (2^8)."},
+    
+    // ==================== CÁLCULO DE DIRECCIONES DE RED ====================
+    {profe:false, unit:"Direcciones de Red", diff:"medium", q:"¿Cuál es la dirección de red de 192.68.25.200 con máscara 255.255.255.0?", opts:["192.68.25.0","192.68.0.0","192.68.25.200","192.68.25.255"], ans:0, exp:"Operación AND entre IP y máscara: 192.68.25.200 AND 255.255.255.0 = 192.68.25.0."},
+    {profe:false, unit:"Direcciones de Red", diff:"medium", q:"¿Cuál es la dirección de red de 192.168.5.35 con máscara 255.255.255.240?", opts:["192.168.5.32","192.168.5.48","192.168.5.16","192.168.5.0"], ans:0, exp:"Máscara 240, blocksize 16. 35/16 = 2, 2*16=32. Dirección de red 192.168.5.32."},
+    {profe:false, unit:"Direcciones de Red", diff:"hard", q:"¿Cuál es la dirección de red de 172.25.100.50 con máscara 255.255.252.0?", opts:["172.25.96.0","172.25.100.0","172.25.104.0","172.25.98.0"], ans:0, exp:"Máscara 255.255.252.0 = /22, blocksize 4 en tercer octeto. 100/4=25, 25*4=100. Dirección: 172.25.100.0? No, 100 es múltiplo de 4, sería 172.25.100.0."},
+    {profe:false, unit:"Direcciones de Red", diff:"hard", q:"¿Cuál es la dirección de red de 10.15.200.100 con máscara 255.255.240.0?", opts:["10.15.192.0","10.15.200.0","10.15.208.0","10.15.196.0"], ans:0, exp:"Máscara 255.255.240.0 = /20, blocksize 16 en tercer octeto. 200/16=12.5 → 12*16=192. Dirección: 10.15.192.0."},
+    
+    // ==================== CÁLCULO DE BROADCAST ====================
+    {profe:false, unit:"Broadcast", diff:"medium", q:"Para la subred 192.168.1.32/28, ¿cuál es la dirección de broadcast?", opts:["192.168.1.32","192.168.1.47","192.168.1.48","192.168.1.63"], ans:1, exp:"/28 = 255.255.255.240, blocksize 16. Red 192.168.1.32, broadcast = red + blocksize -1 = 32+16-1=47 → 192.168.1.47."},
+    {profe:false, unit:"Broadcast", diff:"medium", q:"Para la subred 192.168.1.64/26, ¿cuál es la dirección de broadcast?", opts:["192.168.1.64","192.168.1.127","192.168.1.128","192.168.1.191"], ans:1, exp:"/26 = 255.255.255.192, blocksize 64. Broadcast = 64+64-1=127."},
+    {profe:false, unit:"Broadcast", diff:"hard", q:"Para la subred 172.16.0.0/20, ¿cuál es la dirección de broadcast?", opts:["172.16.15.255","172.16.31.255","172.16.0.255","172.16.255.255"], ans:0, exp:"/20 = 255.255.240.0, blocksize 16 en tercer octeto. Broadcast = 172.16.15.255."},
+    
+    // ==================== RANGOS DE HOSTS ====================
+    {profe:false, unit:"Rangos de Hosts", diff:"medium", q:"¿Cuál es el rango de hosts válidos para la subred 192.168.1.32/27?", opts:["192.168.1.32 - 192.168.1.63","192.168.1.33 - 192.168.1.62","192.168.1.1 - 192.168.1.30","192.168.1.0 - 192.168.1.31"], ans:1, exp:"Máscara /27, blocksize 32. Red 192.168.1.32, broadcast 192.168.1.63. Hosts válidos: 192.168.1.33 a 192.168.1.62."},
+    {profe:false, unit:"Rangos de Hosts", diff:"medium", q:"¿Cuál es el rango de hosts para la subred 10.0.0.0/24?", opts:["10.0.0.0 - 10.0.0.255","10.0.0.1 - 10.0.0.254","10.0.0.0 - 10.0.0.254","10.0.0.1 - 10.0.0.255"], ans:1, exp:"Red 10.0.0.0, broadcast 10.0.0.255, hosts válidos 10.0.0.1 a 10.0.0.254."},
+    
+    // ==================== SISTEMA BINARIO ====================
+    {profe:false, unit:"Sistema Binario", diff:"easy", q:"¿Cuál es la base del sistema binario?", opts:["10","2","16","8"], ans:1, exp:"El sistema binario utiliza base 2, con dígitos 0 y 1."},
+    {profe:false, unit:"Sistema Binario", diff:"easy", q:"¿Qué número decimal representa el binario 1010?", opts:["8","9","10","12"], ans:2, exp:"1*8 + 0*4 + 1*2 + 0*1 = 8+2=10."},
+    {profe:false, unit:"Sistema Binario", diff:"medium", q:"Convierte el número decimal 28 a binario.", opts:["11100","11010","11110","10110"], ans:0, exp:"28/2=14 resto0, 14/2=7 resto0, 7/2=3 resto1, 3/2=1 resto1, 1/2=0 resto1. Leyendo restos al revés: 11100."},
+    {profe:false, unit:"Sistema Binario", diff:"medium", q:"Convierte el número decimal 71 a binario.", opts:["1000111","1001111","1010111","1100111"], ans:0, exp:"71/2=35 r1, 35/2=17 r1, 17/2=8 r1, 8/2=4 r0, 4/2=2 r0, 2/2=1 r0, 1/2=0 r1 → 1000111."},
+    {profe:false, unit:"Sistema Binario", diff:"medium", q:"Convierte el número decimal 255 a binario.", opts:["11111111","11111110","11111000","11110000"], ans:0, exp:"255 en binario es 11111111 (8 bits todos en 1)."},
+    {profe:false, unit:"Sistema Binario", diff:"medium", q:"Convierte el binario 11000000 a decimal.", opts:["128","192","224","240"], ans:1, exp:"128+64 = 192."},
+    {profe:false, unit:"Sistema Binario", diff:"medium", q:"Convierte el binario 11100000 a decimal.", opts:["192","224","240","248"], ans:1, exp:"128+64+32 = 224."},
+    {profe:false, unit:"Sistema Binario", diff:"medium", q:"¿Qué operación lógica binaria produce '1' solo si ambas entradas son '1'?", opts:["OR","AND","XOR","NOT"], ans:1, exp:"La compuerta AND (Y) da 1 solo cuando todos los bits son 1. Se utiliza en el cálculo de direcciones de red."},
+    {profe:false, unit:"Sistema Binario", diff:"easy", q:"¿Qué es un bit?", opts:["Un byte de información","Un dígito binario (0 o 1)","Un paquete de datos","Un protocolo de red"], ans:1, exp:"Bit es la contracción de Binary digit. Es la unidad mínima de información."},
+    
+    // ==================== IPv6 - CONCEPTOS BÁSICOS ====================
+    {profe:false, unit:"IPv6", diff:"easy", q:"¿Cuántos bits tiene una dirección IPv6?", opts:["32 bits","64 bits","128 bits","256 bits"], ans:2, exp:"IPv6 utiliza 128 bits, divididos en 8 grupos de 16 bits (hextetos)."},
+    {profe:false, unit:"IPv6", diff:"easy", q:"¿Qué tipo de dirección IPv6 reemplaza al broadcast de IPv4?", opts:["Unicast","Multicast","Anycast","Loopback"], ans:1, exp:"En IPv6 no existe broadcast. Se utiliza multicast para enviar paquetes a un grupo específico de equipos."},
+    {profe:false, unit:"IPv6", diff:"easy", q:"¿Qué es un hexteto en IPv6?", opts:["Un grupo de 8 bits","Un grupo de 16 bits","Un grupo de 32 bits","Un grupo de 64 bits"], ans:1, exp:"Una dirección IPv6 se divide en 8 hextetos (grupos) de 16 bits cada uno."},
+    {profe:false, unit:"IPv6", diff:"easy", q:"¿Cuál es una característica principal de IPv6 respecto a seguridad?", opts:["No incluye seguridad","Incluye IPsec como parte del protocolo base","Solo ofrece seguridad con firewall","Es menos seguro que IPv4"], ans:1, exp:"IPv6 incluye IPsec en el protocolo base, proporcionando autenticación y encriptación."},
+    {profe:false, unit:"IPv6", diff:"easy", q:"¿Qué funcionalidad permite IPv6 sin necesidad de servidores DHCP?", opts:["Autoconfiguración SLAAC","Multicasting","Anycast","Fragmentación"], ans:0, exp:"IPv6 incluye autoconfiguración de direcciones sin estado (SLAAC)."},
+    
+    // ==================== IPv6 - REGLAS DE COMPRESIÓN ====================
+    {profe:false, unit:"IPv6 Compresión", diff:"medium", q:"Aplica la regla de compresión #1 (omitir ceros iniciales) a: 2001:0DB8:0000:0000:0000:0000:1428:57AB", opts:["2001:DB8:0:0:0:0:1428:57AB","2001:DB8::1428:57AB","2001:DB8::0:1428:57AB","2001:DB8:0::1428:57AB"], ans:0, exp:"Omitir ceros iniciales: 0DB8→DB8, 0000→0. Queda 2001:DB8:0:0:0:0:1428:57AB."},
+    {profe:false, unit:"IPv6 Compresión", diff:"medium", q:"Aplica la regla de compresión #2 (::) a: 2001:DB8:0:0:0:0:1428:57AB", opts:["2001:DB8::1428:57AB","2001:DB8:0::1428:57AB","2001:DB8::0:1428:57AB","2001:DB8:0:0::1428:57AB"], ans:0, exp:"Los dos puntos dobles (::) reemplazan la cadena contigua de segmentos de ceros. Resultado: 2001:DB8::1428:57AB."},
+    {profe:false, unit:"IPv6 Compresión", diff:"medium", q:"Aplica regla #1 a: 2001:010F:0ABC:345D:1100:0000:FCD2:00AA", opts:["2001:10F:ABC:345D:1100:0:FCD2:AA","2001:10F:0ABC:345D:1100:0:FCD2:AA","2001:10F:ABC:345D:1100::FCD2:AA","2001:10F::345D:1100:0:FCD2:AA"], ans:0, exp:"Omitir ceros iniciales: 010F→10F, 0ABC→ABC, 0000→0, 00AA→AA."},
+    {profe:false, unit:"IPv6 Compresión", diff:"hard", q:"Aplica ambas reglas a: 3FFE:0000:0000:0000:1245:0098:3210:0002", opts:["3FFE::1245:98:3210:2","3FFE:0:0:0:1245:98:3210:2","3FFE::1245:0098:3210:0002","3FFE:0:0:0:1245:0098:3210:2"], ans:0, exp:"Regla #1: 3FFE:0:0:0:1245:98:3210:2. Regla #2: 3FFE::1245:98:3210:2."},
+    {profe:false, unit:"IPv6 Compresión", diff:"hard", q:"Aplica ambas reglas a: FF01:0000:0000:0000:0000:0000:0000:0101", opts:["FF01::101","FF01:0:0:0:0:0:0:101","FF01::1:1","FF01::101:1"], ans:0, exp:"Omitir ceros iniciales: FF01:0:0:0:0:0:0:101. Luego :: en la cadena de ceros: FF01::101."},
+    {profe:false, unit:"IPv6 Compresión", diff:"medium", q:"¿Cuál es la representación comprimida de 0:0:0:0:0:0:192.168.44.1?", opts:["::192.168.44.1","0:0:0:0:0:0:192.168.44.1","::C0A8:2C01","192.168.44.1"], ans:0, exp:"IPv6 permite compresión de ceros con :: y también incluir direcciones IPv4 al final."},
+    {profe:false, unit:"IPv6 Compresión", diff:"medium", q:"¿Cuál de las siguientes es una dirección IPv6 válida comprimida?", opts:["2001:0db8::1428::57ab","2001:db8::1428:57ab","2001:db8:0:0:1428:57ab::","2001:db8::1428::57ab"], ans:1, exp:"Los dos puntos dobles (::) solo pueden usarse una vez en una dirección para evitar ambigüedad."},
+    {profe:false, unit:"IPv6 Compresión", diff:"medium", q:"¿Qué dirección IPv6 comprimida es equivalente a 2001:0DB8:0000:0000:ABCD:0000:0000:1234?", opts:["2001:DB8::ABCD:0:0:1234","2001:DB8:0:0:ABCD::1234","2001:DB8::ABCD::1234","2001:DB8:0:0:ABCD:0:0:1234"], ans:1, exp:"Se puede comprimir la primera cadena de ceros o la segunda, pero no ambas. 2001:DB8:0:0:ABCD::1234 es válida."},
+    
+    // ==================== TIPOS DE DIRECCIONES IPv6 ====================
+    {profe:false, unit:"IPv6 Tipos", diff:"medium", q:"¿Qué tipo de dirección IPv6 identifica de manera única una interfaz?", opts:["Multicast","Anycast","Unicast","Broadcast"], ans:2, exp:"Una dirección Unicast identifica de manera única una interfaz."},
+    {profe:false, unit:"IPv6 Tipos", diff:"medium", q:"¿Qué tipo de dirección IPv6 se envía a un grupo específico de interfaces?", opts:["Unicast","Multicast","Anycast","Loopback"], ans:1, exp:"Multicast envía paquetes a todos los dispositivos que tienen la misma dirección multicast."},
+    {profe:false, unit:"IPv6 Tipos", diff:"medium", q:"¿Qué dirección IPv6 es equivalente a loopback (127.0.0.1) en IPv4?", opts:["::1","::0","0:0:0:0:0:0:0:1","Ambas A y C"], ans:3, exp:"La dirección loopback en IPv6 es ::1, que es la compresión de 0:0:0:0:0:0:0:1."},
+    {profe:false, unit:"IPv6 Tipos", diff:"medium", q:"¿Qué dirección IPv6 representa una dirección no especificada?", opts:["::1","::0","0:0:0:0:0:0:0:0","Ambas B y C"], ans:3, exp:"La dirección no especificada es :: o 0:0:0:0:0:0:0:0, se usa cuando no hay dirección asignada."},
+    
+    // ==================== PREGUNTAS DE REPASO GENERAL ====================
+    {profe:false, unit:"Repaso", diff:"medium", q:"¿Qué representa el gateway predeterminado en una subred?", opts:["La dirección de red","La dirección de broadcast","La dirección del router conectado a la subred","Cualquier dirección de host"], ans:2, exp:"El gateway predeterminado es la dirección IP del router que conecta la subred con otras redes."},
+    {profe:false, unit:"Repaso", diff:"medium", q:"¿Por qué se restan 2 direcciones al calcular hosts útiles?", opts:["Por seguridad","Por la dirección de red y broadcast","Por el gateway","Por el DNS"], ans:1, exp:"Se restan la dirección de red (primera) y la dirección de broadcast (última) que no pueden asignarse a hosts."},
+    {profe:false, unit:"Repaso", diff:"medium", q:"¿Qué es CIDR?", opts:["Un protocolo de enrutamiento","Notación que indica cantidad de bits de red","Un tipo de cable","Un sistema operativo"], ans:1, exp:"CIDR (Classless Inter-Domain Routing) usa notación como /24 para indicar los bits de red."},
+    {profe:false, unit:"Repaso", diff:"hard", q:"Si una empresa tiene 4 departamentos y cada uno necesita al menos 50 hosts, ¿qué máscara debe usar como mínimo?", opts:["/24 (255.255.255.0)","/25 (255.255.255.128)","/26 (255.255.255.192)","/27 (255.255.255.224)"], ans:2, exp:"/26 da 62 hosts por subred (2^6-2=62) >=50. /27 solo da 30 hosts."}
+],
+examen: [ // ==================== EXAMEN FINAL - FUNDAMENTOS SEGURIDAD ====================
+    // 1. Definición seguridad de la información
+    {profe:true, unit:"Examen Final", diff:"medium",
+     q:"¿Qué define mejor el concepto de 'seguridad de la información'?",
+     opts:["Solo la protección de equipos informáticos contra virus","El conjunto de medidas, prácticas y políticas destinadas a proteger los datos en cualquier formato contra accesos no autorizados, modificaciones o divulgación indebida","Únicamente el cifrado de datos sensibles","La instalación de firewalls y antivirus en la red corporativa"],
+     ans:1, exp:"La seguridad de la información es el conjunto de medidas, prácticas y políticas destinadas a proteger los datos en cualquier formato (digital, físico o verbal) contra accesos no autorizados, modificaciones, destrucción o divulgación indebida. Su objetivo central es garantizar confidencialidad, integridad y disponibilidad."},
+
+    // 2. Integridad
+    {profe:true, unit:"Examen Final", diff:"easy",
+     q:"¿Qué característica de la Triada de la Seguridad asegura que los datos no sean manipulados?",
+     opts:["Confidencialidad","Integridad","Disponibilidad","Autenticidad"],
+     ans:1, exp:"La Integridad garantiza que los datos no sean alterados ni modificados sin autorización. Asegura que la información permanezca exacta y completa. Se implementa mediante algoritmos de hash como SHA-256."},
+
+    // 3. Técnica que garantiza confidencialidad
+    {profe:true, unit:"Examen Final", diff:"easy",
+     q:"¿Qué técnica garantiza la confidencialidad de la información?",
+     opts:["Hash","Cifrado","Firma digital","Tokenización"],
+     ans:1, exp:"El cifrado es la técnica principal para garantizar confidencialidad. Transforma la información en formato ilegible para quienes no posean la clave. AES (Advanced Encryption Standard) es el estándar más utilizado."},
+
+    // 4. Estándar ISO 27001
+    {profe:true, unit:"Examen Final", diff:"medium",
+     q:"¿Qué estándar internacional se utiliza para la gestión de seguridad de la información?",
+     opts:["ISO 9001","ISO 27001","ISO 14001","ISO 45001"],
+     ans:1, exp:"ISO 27001:2022 es el estándar internacional para la gestión de seguridad de la información. Establece requisitos para implementar, mantener y mejorar un Sistema de Gestión de Seguridad de la Información (SGSI)."},
+
+    // 5. Características Nessus
+    {profe:true, unit:"Examen Final", diff:"medium",
+     q:"Características de la herramienta Nessus.",
+     opts:["Framework de pentesting con exploits personalizables","Escáner de vulnerabilidades que detecta configuraciones erróneas, software desactualizado y genera informes detallados","Herramienta exclusiva para aplicaciones web","Sistema de monitoreo de redes en tiempo real"],
+     ans:1, exp:"Nessus es un escáner de vulnerabilidades profesional. Detecta configuraciones erróneas, software desactualizado, genera informes con severidad CVSS, permite escanear múltiples sistemas y es ideal para auditorías de seguridad."},
+
+    // 6. Estrategia que minimiza impacto
+    {profe:true, unit:"Examen Final", diff:"medium",
+     q:"¿Qué estrategia minimiza el impacto de un ataque exitoso?",
+     opts:["Defensa en profundidad con múltiples capas de controles y segmentación de red","Usar un solo firewall muy potente","Instalar solo antivirus","Realizar backups semanales únicamente"],
+     ans:0, exp:"La defensa en profundidad implementa múltiples capas de controles independientes (firewall, segmentación, MFA, backups, SIEM). Si una capa falla, las siguientes protegen, minimizando el impacto."},
+
+    // 7. Protocolo comunicaciones seguras web
+    {profe:true, unit:"Examen Final", diff:"easy",
+     q:"¿Qué protocolo garantiza comunicaciones seguras en la web?",
+     opts:["HTTP","FTP","HTTPS","SMTP"],
+     ans:2, exp:"HTTPS (HTTP Secure) combina HTTP con TLS/SSL, cifrando la comunicación entre navegador y servidor, garantizando confidencialidad e integridad de los datos transmitidos. Usa puerto 443."},
+
+    // 8. Principio mínimo privilegio
+    {profe:true, unit:"Examen Final", diff:"medium",
+     q:"¿Qué representa el principio de 'mínimo privilegio'?",
+     opts:["Dar acceso total a todos los usuarios","Cada usuario debe tener acceso solo a los recursos estrictamente necesarios para su función","Los administradores tienen todos los privilegios","Los privilegios se asignan según antigüedad"],
+     ans:1, exp:"El principio de mínimo privilegio establece que cada usuario, proceso o sistema debe tener acceso únicamente a los recursos estrictamente necesarios para realizar sus funciones. Reduce la superficie de ataque."},
+
+    // 9. Medida efectiva contra ransomware
+    {profe:true, unit:"Examen Final", diff:"medium",
+     q:"¿Qué medida es efectiva contra ataques de ransomware?",
+     opts:["Pagar el rescate inmediatamente","Mantener copias de seguridad actualizadas y almacenadas en ubicaciones separadas (offline)","Desconectar todos los equipos","Formatear todos los discos"],
+     ans:1, exp:"La medida más efectiva son copias de seguridad aisladas (offline) que permiten restaurar los datos sin pagar rescate. Complementar con actualizaciones, EDR, segmentación y capacitación contra phishing."},
+
+    // 10. Análisis de riesgos
+    {profe:true, unit:"Examen Final", diff:"medium",
+     q:"¿Qué técnica de análisis de riesgos considera tanto amenazas como vulnerabilidades?",
+     opts:["Análisis FODA","Análisis de brecha","Análisis de riesgos (Riesgo = Probabilidad × Impacto)","Auditoría interna"],
+     ans:2, exp:"El análisis de riesgos evalúa amenazas (eventos externos) y vulnerabilidades (debilidades internas) mediante la fórmula Riesgo = Probabilidad × Impacto, priorizando mediante Matriz de Riesgos."},
+
+    // 11. ISO 27005
+    {profe:true, unit:"Examen Final", diff:"hard",
+     q:"Características de la ISO 27005.",
+     opts:["Idéntica a ISO 27001","Estándar específico para gestión de riesgos en seguridad de la información, complementando a ISO 27001","Regula exclusivamente el cifrado","Norma para auditorías externas"],
+     ans:1, exp:"ISO 27005 complementa ISO 27001 con guía detallada para gestión de riesgos. Define proceso iterativo: contexto, identificación, análisis, evaluación y tratamiento. Opciones: mitigar, transferir, aceptar o evitar."},
+
+    // 12. Confidencialidad
+    {profe:true, unit:"Examen Final", diff:"easy",
+     q:"¿Qué representa la confidencialidad en la Triada de la Seguridad?",
+     opts:["Datos disponibles siempre","Información accesible solo para personas autorizadas","Datos no modificados sin autorización","Monitoreo continuo"],
+     ans:1, exp:"La confidencialidad asegura que la información sea accesible únicamente para personas, procesos o sistemas debidamente autorizados. Se implementa mediante cifrado, controles de acceso y autenticación."},
+
+    // 13. Enfoque NIST CSF
+    {profe:true, unit:"Examen Final", diff:"medium",
+     q:"¿Qué enfoque utiliza el estándar NIST CSF para gestionar riesgos?",
+     opts:["Enfoque punitivo con multas","Marco de cinco funciones: Identificar, Proteger, Detectar, Responder y Recuperar","Sistema de certificación obligatorio","Solo aplica a gobierno"],
+     ans:1, exp:"NIST CSF usa 5 funciones: Identificar (activos), Proteger (salvaguardas), Detectar (eventos), Responder (contención) y Recuperar (restauración). Marco flexible basado en riesgos y mejora continua."},
+
+    // 14. Gestión de parches
+    {profe:true, unit:"Examen Final", diff:"easy",
+     q:"¿Qué asegura la gestión de parches en un sistema?",
+     opts:["Cambio de contraseñas","Corrección de vulnerabilidades conocidas mediante actualizaciones de software","Configuración de firewalls","Capacitación de empleados"],
+     ans:1, exp:"La gestión de parches asegura que sistemas estén actualizados con correcciones de seguridad. Muchos ataques explotan vulnerabilidades con parches disponibles pero no aplicados."},
+
+    // 15. Acción crucial para proteger información en la nube
+    {profe:true, unit:"Examen Final", diff:"medium",
+     q:"¿Qué acción es crucial para proteger la información en la nube?",
+     opts:["Solo usar contraseñas simples","Cifrado de datos en tránsito y reposo, controles de acceso estrictos y autenticación multifactor","Compartir credenciales entre usuarios","Deshabilitar auditorías"],
+     ans:1, exp:"Proteger información en la nube requiere: cifrado en tránsito y reposo, controles de acceso estrictos, MFA, configuraciones correctas, auditorías continuas y cumplimiento de estándares como ISO 27001."},
+
+    // 16. Características MFA
+    {profe:true, unit:"Examen Final", diff:"medium",
+     q:"Características de la autenticación multifactor (MFA).",
+     opts:["Solo requiere usuario y contraseña","Combina dos o más factores: algo que sabes, algo que tienes, algo que eres","Reemplaza completamente las contraseñas","Solo se usa en accesos locales"],
+     ans:1, exp:"MFA combina factores independientes: algo que sabes (contraseña), algo que tienes (token) y algo que eres (biometría). Reduce drásticamente acceso no autorizado incluso si la contraseña es robada."},
+
+    // 17. Ventaja ISO 27001
+    {profe:true, unit:"Examen Final", diff:"medium",
+     q:"¿Qué ventaja clave tiene la implementación de ISO 27001?",
+     opts:["Incrementa el valor de activos físicos","Facilita la gestión integral de riesgos de seguridad de la información, generando confianza y cumplimiento normativo","Mejora la productividad directamente","Garantiza integridad física de servidores"],
+     ans:1, exp:"ISO 27001 facilita gestión integral de riesgos, genera confianza ante clientes, ayuda al cumplimiento legal, estandariza procesos, promueve mejora continua y reduce incidentes de seguridad."},
+
+    // 18. Normativa internacional protección datos
+    {profe:true, unit:"Examen Final", diff:"medium",
+     q:"¿Qué normativa internacional regula la protección de datos personales?",
+     opts:["ISO 27001","GDPR (General Data Protection Regulation)","PCI DSS","NIST CSF"],
+     ans:1, exp:"GDPR es la normativa europea que regula protección de datos personales. Aplica a cualquier organización que trate datos de ciudadanos de la UE, establece derechos del titular y sanciones hasta 20M€ o 4% facturación."},
+
+    // 19. Ley chilena delitos informáticos
+    {profe:true, unit:"Examen Final", diff:"medium",
+     q:"¿Qué ley chilena aborda los delitos informáticos?",
+     opts:["Ley 19.223 y Ley 21.459","Ley 20.000","Ley 19.628","Ley 21.643"],
+     ans:0, exp:"Ley 19.223 (1993) fue la primera ley de delitos informáticos. Ley 21.459 (2022) moderniza la legislación, se alinea con Convenio de Budapest, introduce nuevos delitos (malware, fraude informático) y aumenta penas."},
+
+    // 20. Propósito Convenio de Budapest
+    {profe:true, unit:"Examen Final", diff:"medium",
+     q:"¿Cuál es el propósito principal del Convenio de Budapest?",
+     opts:["Regular el comercio electrónico","Armonizar leyes sobre delitos informáticos y facilitar cooperación internacional","Establecer estándares de cifrado","Definir privacidad en redes sociales"],
+     ans:1, exp:"El Convenio de Budapest armoniza legislaciones nacionales sobre delitos informáticos y fomenta cooperación internacional en investigaciones transnacionales. Chile se adhirió, inspirando la Ley 21.459."},
+
+    // 21. Medida mitigar riesgos legales datos personales
+    {profe:true, unit:"Examen Final", diff:"medium",
+     q:"¿Qué medida puede mitigar riesgos legales en el manejo de datos personales?",
+     opts:["Ignorar el consentimiento","Obtener consentimiento explícito, implementar política de privacidad, cifrado y controles de acceso","Compartir datos sin restricciones","No registrar actividades"],
+     ans:1, exp:"Mitigar riesgos legales requiere: consentimiento explícito, política de privacidad clara, controles técnicos (cifrado, acceso restringido), Delegado de Protección de Datos (DPD), y auditorías periódicas de cumplimiento."},
+
+    // 22. Delito informático según Ley 21.459
+    {profe:true, unit:"Examen Final", diff:"medium",
+     q:"¿Qué acción es un delito informático según la normativa chilena actualizada?",
+     opts:["Usar contraseña débil","Acceso ilícito a sistemas, interceptación ilegal, distribución de malware y fraude informático","Navegar por internet","Descargar archivos legales"],
+     ans:1, exp:"Ley 21.459 tipifica: acceso ilícito a sistemas, interceptación ilegal, distribución de malware, fraude informático, falsificación de datos digitales y abuso de dispositivos. Penas de cárcel y multas."},
+
+    // 23. Características Ley 19.628
+    {profe:true, unit:"Examen Final", diff:"medium",
+     q:"Características de la Ley 19.628.",
+     opts:["Regula exclusivamente datos médicos","Establece principios de consentimiento, finalidad y seguridad en tratamiento de datos personales en Chile","Aplica solo a empresas grandes","No tiene sanciones"],
+     ans:1, exp:"Ley 19.628 establece principios de consentimiento, finalidad y seguridad. Reconoce derechos de acceso, rectificación y cancelación. Base normativa chilena en proceso de modernización hacia estándares GDPR."},
+
+    // 24. Principio ético proteger privacidad
+    {profe:true, unit:"Examen Final", diff:"easy",
+     q:"¿Qué principio ético implica proteger la privacidad de los usuarios?",
+     opts:["Lucro","Respeto a la privacidad o privacidad por diseño","Competencia desleal","Maximizar recolección de datos"],
+     ans:1, exp:"El principio de respeto a la privacidad (privacidad por diseño) implica proteger activamente información personal, no recopilar más datos de los necesarios, no compartir sin consentimiento y proteger de accesos no autorizados."},
+
+    // 25. Qué regula Ley 21.459
+    {profe:true, unit:"Examen Final", diff:"medium",
+     q:"¿Qué regula la Ley 21.459 respecto a la ciberseguridad?",
+     opts:["Solo contraseñas","Moderniza delitos informáticos: acceso ilícito, interceptación ilegal, fraude informático, alineándose con Convenio de Budapest","Crea nuevas empresas","Regula redes sociales"],
+     ans:1, exp:"Ley 21.459 moderniza delitos informáticos en Chile. Tipifica acceso ilícito, interceptación ilegal, ataque a integridad de datos, fraude informático. Se alinea con Convenio de Budapest."},
+
+    // 26. Concepto ético uso responsable tecnologías
+    {profe:true, unit:"Examen Final", diff:"easy",
+     q:"¿Qué concepto ético promueve el uso responsable de tecnologías digitales?",
+     opts:["Ciudadanía digital o ética en la informática","Hackeo","Piratería","Crackeo"],
+     ans:0, exp:"Ciudadanía digital promueve uso responsable, seguro y respetuoso de tecnologías: respetar propiedad intelectual, proteger privacidad, no participar en actividades ilegales, asumir responsabilidad social."},
+
+    // 27. Normativa transferencia internacional datos
+    {profe:true, unit:"Examen Final", diff:"medium",
+     q:"¿Qué normativa busca garantizar la privacidad en la transferencia internacional de datos?",
+     opts:["ISO 27001","GDPR, que regula transferencias internacionales exigiendo nivel de protección adecuado","PCI DSS","Ley 19.223"],
+     ans:1, exp:"GDPR regula transferencias internacionales de datos de ciudadanos europeos, exigiendo que el país destino garantice protección adecuada. Incluye Cláusulas Contractuales Tipo y marcos de adecuación."},
+
+    // 28. Características GDPR
+    {profe:true, unit:"Examen Final", diff:"medium",
+     q:"Características de la normativa GDPR.",
+     opts:["Solo aplica en Europa","Aplica a cualquier organización que trate datos de ciudadanos UE, reconoce derecho al olvido, obliga notificar brechas en 72 horas, sanciones hasta 20M€ o 4% facturación","No tiene sanciones","Solo para empresas públicas"],
+     ans:1, exp:"GDPR: aplica extraterritorialmente, derechos del titular (acceso, rectificación, portabilidad, derecho al olvido), consentimiento explícito, notificación de brechas en 72h, DPD, sanciones hasta 20M€ o 4% facturación anual global."},
+
+    // 29. Responsabilidad ante filtración datos
+    {profe:true, unit:"Examen Final", diff:"medium",
+     q:"¿Qué responsabilidad tiene una empresa ante la filtración de datos personales?",
+     opts:["Ignorar el incidente","Notificar a autoridad en 72 horas, informar a titulares afectados, investigar e implementar medidas correctivas","Solo informar internamente","Esperar que pase"],
+     ans:1, exp:"Ante filtración: notificar autoridad en 72h (GDPR), informar titulares si riesgo alto, investigar incidente, implementar medidas correctivas, demostrar controles adecuados y enfrentar posibles sanciones."},
+
+    // 30. Artículo 17 GDPR
+    {profe:true, unit:"Examen Final", diff:"medium",
+     q:"¿Qué regula el artículo 17 del GDPR?",
+     opts:["Derecho al olvido (derecho de supresión)","Derecho de acceso","Derecho de portabilidad","Derecho de rectificación"],
+     ans:0, exp:"Artículo 17 regula el Derecho al olvido o derecho de supresión. Titulares pueden solicitar eliminación de datos cuando ya no son necesarios, retiran consentimiento, o datos fueron tratados ilícitamente."},
+
+    // 31. Organización que creó ISO 27001
+    {profe:true, unit:"Examen Final", diff:"easy",
+     q:"¿Qué organización creó el estándar ISO 27001?",
+     opts:["ISO (International Organization for Standardization) e IEC","IEEE","IETF","W3C"],
+     ans:0, exp:"ISO (International Organization for Standardization) en conjunto con IEC creó ISO/IEC 27001. Es parte de la familia ISO 27000. Versión vigente ISO 27001:2022."},
+
+    // 32. Principio fomenta transparencia en datos
+    {profe:true, unit:"Examen Final", diff:"easy",
+     q:"¿Qué principio fomenta la transparencia en el manejo de datos personales?",
+     opts:["Principio de transparencia","Principio de opacidad","Principio de secreto","Principio de confidencialidad"],
+     ans:0, exp:"Principio de transparencia: organizaciones deben informar claramente qué datos recopilan, con qué finalidad, cómo los protegen, con quién los comparten. Presente en GDPR y Ley 19.628."},
+
+    // 33. Convenio de Budapest cooperación internacional
+    {profe:true, unit:"Examen Final", diff:"medium",
+     q:"¿Qué establece el Convenio de Budapest en relación con la cooperación internacional?",
+     opts:["No hay cooperación","Países firmantes deben colaborar mutuamente en investigación de delitos informáticos transnacionales, facilitando intercambio ágil de evidencia digital","Solo cooperación europea","Cooperación voluntaria"],
+     ans:1, exp:"Convenio de Budapest establece colaboración mutua entre países firmantes en investigación de delitos informáticos transnacionales, facilitando intercambio ágil de evidencia digital y asistencia jurídica mutua."},
+
+    // 34. Matriz de riesgos
+    {profe:true, unit:"Examen Final", diff:"medium",
+     q:"¿Qué representa una matriz de riesgos en la gestión de seguridad de la información?",
+     opts:["Herramienta visual que prioriza amenazas según probabilidad e impacto","Lista de vulnerabilidades","Informe financiero","Diagrama de red"],
+     ans:0, exp:"Matriz de riesgos es herramienta visual que prioriza amenazas según probabilidad e impacto. Organiza riesgos en categorías (bajo, moderado, alto, crítico) usando Riesgo = Probabilidad × Impacto."},
+
+    // 35. Características Nikto, Nessus, OpenVAS
+    {profe:true, unit:"Examen Final", diff:"hard",
+     q:"Características de las herramientas Nikto, Nessus y OpenVAS.",
+     opts:["Todas son iguales","Nessus: escáner profesional de pago; OpenVAS: código abierto gratuito; Nikto: enfocada en servidores web","Solo Nessus es válida","Ninguna sirve"],
+     ans:1, exp:"Nessus: escáner profesional de pago, detecta configuraciones erróneas; OpenVAS: código abierto gratuito, funcionalidad similar; Nikto: código abierto, enfocada en evaluación de servidores web."},
+
+    // 36. Primer paso gestión vulnerabilidades
+    {profe:true, unit:"Examen Final", diff:"medium",
+     q:"¿Qué acción corresponde al primer paso en la gestión de vulnerabilidades?",
+     opts:["Aplicar parches","Identificación de vulnerabilidades mediante escáneres","Informar a usuarios","Comprar software"],
+     ans:1, exp:"Primer paso: identificación de vulnerabilidades mediante escáneres (Nessus, OpenVAS). Sin identificar primero qué vulnerabilidades existen, no es posible priorizarlas ni remediarlas."},
+
+    // 37. Método medir criticidad vulnerabilidad
+    {profe:true, unit:"Examen Final", diff:"medium",
+     q:"¿Qué método se utiliza para medir la criticidad de una vulnerabilidad?",
+     opts:["CVSS (Common Vulnerability Scoring System)","ISO 27001","PCI DSS","NIST"],
+     ans:0, exp:"CVSS es método estandarizado para medir criticidad. Genera puntaje 0-10 basado en Base Score (características intrínsecas), Temporal Score (factor tiempo) y Environmental Score (contexto organizacional)."},
+
+    // 38. Medida clave mitigar acceso no autorizado
+    {profe:true, unit:"Examen Final", diff:"medium",
+     q:"¿Qué medida es clave para mitigar el riesgo de acceso no autorizado?",
+     opts:["Usar solo contraseñas","Autenticación multifactor (MFA) combinada con principio de mínimo privilegio","Compartir credenciales","Deshabilitar logs"],
+     ans:1, exp:"Medida clave: MFA combinada con gestión robusta de accesos basada en mínimo privilegio. Complementar con contraseñas fuertes, monitoreo SIEM y segmentación de red."},
+
+    // 39. Características SIEM, Firewall, VPN, IDS
+    {profe:true, unit:"Examen Final", diff:"hard",
+     q:"Características de SIEM, Firewall, VPN e IDS.",
+     opts:["SIEM: correlación eventos; Firewall: filtra tráfico; VPN: túnel cifrado; IDS: detecta intrusiones","Todos son iguales","Solo sirven para redes","Ninguna es correcta"],
+     ans:0, exp:"SIEM: recopila y correlaciona eventos de seguridad; Firewall: filtra tráfico según reglas; VPN: crea túnel cifrado sobre redes públicas; IDS: monitorea y detecta patrones sospechosos."},
+
+    // 40. Técnica reducir superficie ataque red
+    {profe:true, unit:"Examen Final", diff:"medium",
+     q:"¿Qué técnica puede usarse para reducir la superficie de ataque de una red?",
+     opts:["Segmentación de red, deshabilitar servicios y puertos innecesarios, listas blancas","Abrir todos los puertos","Conectar todos los equipos","Usar una sola VLAN"],
+     ans:0, exp:"Segmentación de red divide en zonas aisladas. Complementar con deshabilitar servicios y puertos innecesarios, listas blancas de aplicaciones, y mantener sistemas actualizados."},
+
+    // 41. Características Nikto, Burp Suite, OWASP ZAP
+    {profe:true, unit:"Examen Final", diff:"hard",
+     q:"Características de las herramientas Nikto, Burp Suite y OWASP ZAP.",
+     opts:["Nikto: servidores web; Burp Suite: plataforma profesional web; OWASP ZAP: proxy gratuito para aplicaciones web","Todas son iguales","Solo Burp Suite sirve","Ninguna es útil"],
+     ans:0, exp:"Nikto: código abierto para servidores web; Burp Suite: plataforma profesional para pruebas de seguridad web; OWASP ZAP: proxy gratuito, amigable, detecta vulnerabilidades web."},
+
+    // 42. Análisis evalúa probabilidad e impacto
+    {profe:true, unit:"Examen Final", diff:"medium",
+     q:"¿Qué tipo de análisis evalúa la probabilidad e impacto de una vulnerabilidad?",
+     opts:["Análisis de riesgos cuantitativo y cualitativo (Riesgo = Probabilidad × Impacto)","Análisis FODA","Análisis de brecha","Análisis financiero"],
+     ans:0, exp:"Análisis de riesgos evalúa probabilidad e impacto mediante fórmula Riesgo = Probabilidad × Impacto. Herramientas: CVSS para severidad técnica, Matriz de Riesgos para priorizar."},
+
+    // 43. Características ISO 27002
+    {profe:true, unit:"Examen Final", diff:"hard",
+     q:"Características de la normativa ISO 27002.",
+     opts:["Certificable por sí sola","Guía de buenas prácticas y controles de seguridad que complementa ISO 27001; define controles por dominios","Reemplaza ISO 27001","Solo para seguridad física"],
+     ans:1, exp:"ISO 27002 complementa ISO 27001 con guía de buenas prácticas y controles detallados. Define catálogo de controles organizados en dominios. No es certificable por sí sola."},
+
+    // 44. Características Metasploit
+    {profe:true, unit:"Examen Final", diff:"hard",
+     q:"Características de la herramienta Metasploit.",
+     opts:["Escáner de vulnerabilidades pasivo","Framework de código abierto para pruebas de penetración (pentesting); contiene exploits y payloads","Sistema de monitoreo","Antivirus"],
+     ans:1, exp:"Metasploit es framework de código abierto para pentesting. Permite simular ataques controlados, contiene amplio catálogo de exploits y payloads. Es herramienta de referencia en ethical hacking."},
+
+    // 45. Medida garantiza disponibilidad
+    {profe:true, unit:"Examen Final", diff:"medium",
+     q:"¿Qué medida ayuda a garantizar la disponibilidad de la información?",
+     opts:["Copias de seguridad regulares, sistemas redundantes, Plan de Disaster Recovery","Solo usar contraseñas","Cifrar todo","No hacer backups"],
+     ans:0, exp:"Disponibilidad (tercer pilar) se garantiza con: copias de seguridad regulares, sistemas redundantes, centros de datos secundarios, Plan de Disaster Recovery, balanceadores de carga y protección DDoS."},
+
+    // 46. Práctica reduce exposición software malicioso
+    {profe:true, unit:"Examen Final", diff:"medium",
+     q:"¿Qué práctica reduce el riesgo de exposición a software malicioso?",
+     opts:["Mantener software actualizado, usar antivirus/EDR, listas blancas de aplicaciones, capacitar usuarios contra phishing","Descargar software de cualquier fuente","Deshabilitar actualizaciones","Usar contraseñas débiles"],
+     ans:0, exp:"Prácticas efectivas: software actualizado, antivirus/EDR, listas blancas (solo software autorizado), no abrir correos sospechosos, capacitación contra phishing e ingeniería social."},
+
+    // 47. Por qué actualizar software regularmente
+    {profe:true, unit:"Examen Final", diff:"easy",
+     q:"¿Por qué es recomendable actualizar regularmente el software?",
+     opts:["Por moda","Los parches de seguridad corrigen vulnerabilidades conocidas que podrían ser explotadas por atacantes","Para consumir más recursos","Para deshabilitar funciones"],
+     ans:1, exp:"Actualizar regularmente es fundamental porque los parches corrigen vulnerabilidades conocidas. Software desactualizado es principal causa de brechas de seguridad. Práctica básica de higiene cibernética."},
+
+    // 48. Estándar fomenta mejora continua
+    {profe:true, unit:"Examen Final", diff:"medium",
+     q:"¿Qué estándar internacional fomenta la mejora continua en la gestión de la seguridad?",
+     opts:["ISO 27001 con ciclo PDCA y NIST CSF con sus cinco funciones","Solo ISO 9001","Solo PCI DSS","Ninguno"],
+     ans:0, exp:"ISO 27001 fomenta mejora continua mediante ciclo PDCA (Plan-Do-Check-Act). NIST CSF también promueve mejora continua a través de sus cinco funciones. Ambos incluyen revisiones periódicas y auditorías."},
+
+    // 49. Técnica verificar configuraciones seguridad
+    {profe:true, unit:"Examen Final", diff:"medium",
+     q:"¿Qué técnica permite verificar las configuraciones de seguridad de un sistema?",
+     opts:["Auditoría de configuraciones (hardening review) usando herramientas como Nessus o benchmarks CIS","Solo instalar antivirus","Reiniciar el sistema","Cambiar contraseñas"],
+     ans:0, exp:"Auditoría de configuraciones (hardening review) verifica que sistemas estén configurados según mejores prácticas. Herramientas como Nessus o benchmarks CIS permiten comparar configuraciones actuales contra estándares seguros."},
+
+    // 50. Por qué son recomendables auditorías internas
+    {profe:true, unit:"Examen Final", diff:"medium",
+     q:"¿Por qué son recomendables las auditorías internas?",
+     opts:["Por obligación sin beneficio","Identificar brechas antes de que sean explotadas, verificar cumplimiento, medir efectividad del SGSI","Solo para gastar recursos","No son necesarias"],
+     ans:1, exp:"Auditorías internas permiten identificar brechas antes de ser explotadas, verificar cumplimiento de políticas y normativas, medir efectividad del SGSI, detectar áreas de mejora y generar evidencia de cumplimiento."},
+
+    // 51. Integridad en seguridad información
+    {profe:true, unit:"Examen Final", diff:"easy",
+     q:"¿Qué representa la integridad en el contexto de la seguridad de la información?",
+     opts:["Datos disponibles siempre","Datos exactos, completos y no alterados sin autorización; implementada mediante hash y firmas digitales","Acceso solo autorizado","Monitoreo continuo"],
+     ans:1, exp:"Integridad garantiza que datos sean exactos y no alterados sin autorización. Se implementa mediante algoritmos de hash (SHA-256), firmas digitales, controles de versión y registros de auditoría."},
+
+    // 52. Marco regula privacidad en UE
+    {profe:true, unit:"Examen Final", diff:"easy",
+     q:"¿Qué marco regula la privacidad y la protección de datos en la Unión Europea?",
+     opts:["ISO 27001","GDPR (General Data Protection Regulation)","Ley 19.628","NIST CSF"],
+     ans:1, exp:"GDPR es el marco principal que regula privacidad y protección de datos en la UE. Vigente desde 2018, aplica a organizaciones que traten datos de ciudadanos europeos."},
+
+    // 53. Medida mitigar riesgos dispositivos móviles
+    {profe:true, unit:"Examen Final", diff:"medium",
+     q:"¿Qué medida puede mitigar riesgos asociados al uso de dispositivos móviles?",
+     opts:["No usar dispositivos","Implementar MDM (Mobile Device Management), cifrado, autenticación fuerte, borrado remoto","Compartir dispositivos sin control","Usar sin contraseña"],
+     ans:1, exp:"Mitigar riesgos móviles: política MDM para gestionar dispositivos, cifrado de almacenamiento, autenticación fuerte (PIN/biometría/MFA), aplicaciones de fuentes oficiales, actualizaciones, borrado remoto."},
+
+    // 54. Qué es gestión incidentes seguridad
+    {profe:true, unit:"Examen Final", diff:"medium",
+     q:"¿Qué es la gestión de incidentes de seguridad?",
+     opts:["Proceso estructurado para detectar, contener, analizar y recuperarse de eventos que comprometan seguridad","Instalar antivirus","Cambiar contraseñas","Hacer backups"],
+     ans:0, exp:"Gestión de incidentes es proceso estructurado: preparación, identificación, contención, erradicación, recuperación y lecciones aprendidas. Objetivo: minimizar impacto, restaurar operación, prevenir repetición."},
+
+    // 55. Enfoque marco NIST
+    {profe:true, unit:"Examen Final", diff:"medium",
+     q:"¿Qué enfoque promueve el marco NIST en la gestión de la seguridad?",
+     opts:["Enfoque basado en riesgos, flexible y adaptable, con cinco funciones: Identificar, Proteger, Detectar, Responder, Recuperar","Enfoque punitivo","Enfoque reactivo","Enfoque sin estructura"],
+     ans:0, exp:"NIST CSF promueve enfoque basado en riesgos, flexible y adaptable. Sus cinco funciones permiten gestionar ciberseguridad de forma integral, continua y alineada con objetivos del negocio."}
+]
+  
+};
+
+// ══════════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════════
+let selectedSubject = 'seg';
+let selectedCount = 999;
+let sessionQuestions = [];
+let current = 0;
+let answers = [];
+let answered = [];
+
+// ── Subject select ──
+function selectSubject(id){
+  selectedSubject = id;
+  document.querySelectorAll('.subject-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('card-' + id).classList.add('selected');
+  updateInfoRow();
+}
+
+// ── Count select ──
+function setCount(n){
+  selectedCount = n;
+  document.querySelectorAll('.count-btn').forEach(b => b.classList.remove('selected'));
+  event.target.classList.add('selected');
+  updateInfoRow();
+}
+
+function updateInfoRow(){
+  const all = BANK[selectedSubject];
+  const profeCount = all.filter(q=>q.profe).length;
+  const total = Math.min(selectedCount === 999 ? all.length : selectedCount, all.length);
+  document.getElementById('info-q').textContent = total;
+}
+
+// ── Shuffle array (Fisher-Yates) ──
+function shuffle(arr){
+  const a = [...arr];
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+
+/// ── Build session: profe y resto se mezclan por separado pero aleatorio dentro de cada grupo ──
+function buildSession(){
+  const all = BANK[selectedSubject];
+  // Separar preguntas del profe y normales
+  const profe = all.filter(q=>q.profe);
+  const rest  = all.filter(q=>!q.profe);
+  
+  // MEZCLAR las preguntas del profe ALEATORIAMENTE entre sí
+  const shuffledProfe = shuffle([...profe]);
+  
+  // MEZCLAR las preguntas normales ALEATORIAMENTE entre sí
+  const shuffledRest = shuffle([...rest]);
+  
+  // Unir: profe mezclados primero, luego normales mezclados
+  const pool = [...shuffledProfe, ...shuffledRest];
+  
+  const count = selectedCount === 999 ? pool.length : Math.min(selectedCount, pool.length);
+  
+  // Shuffle options for each question
+  return pool.slice(0, count).map(q => {
+    const indices = q.opts.map((_,i)=>i);
+    const shuffled = shuffle(indices);
+    return {
+      ...q,
+      opts: shuffled.map(i=>q.opts[i]),
+      ans: shuffled.indexOf(q.ans)
+    };
+  });
+}
+
+function startQuiz(){
+  sessionQuestions = buildSession();
+  current = 0;
+  answers  = new Array(sessionQuestions.length).fill(null);
+  answered = new Array(sessionQuestions.length).fill(false);
+
+  document.getElementById('screen-start').classList.remove('active');
+  document.getElementById('screen-quiz').classList.add('active');
+  buildDots();
+  renderQuestion();
+  window.scrollTo(0,0);
+}
+
+// ══════════════════════════════════════════════════════════
+// DOTS
+// ══════════════════════════════════════════════════════════
+function buildDots(){
+  const c = document.getElementById('dots-container');
+  c.innerHTML = '';
+  sessionQuestions.forEach((_,i)=>{
+    const d = document.createElement('button');
+    d.className='dot'; d.textContent=i+1; d.title=`Pregunta ${i+1}`;
+    d.id=`dot-${i}`; d.onclick=()=>{current=i;renderQuestion();};
+    c.appendChild(d);
+  });
+}
+function updateDots(){
+  sessionQuestions.forEach((_,i)=>{
+    const d=document.getElementById(`dot-${i}`);
+    d.className='dot';
+    if(i===current) d.classList.add('current');
+    else if(answered[i]) d.classList.add(answers[i]===sessionQuestions[i].ans?'answered-c':'answered-w');
+  });
+}
+function updateProgress(){
+  const total=sessionQuestions.length;
+  const done=answered.filter(Boolean).length;
+  const pct=Math.round((done/total)*100);
+  document.getElementById('prog-label').textContent=`Pregunta ${current+1} de ${total}`;
+  document.getElementById('prog-pct').textContent=`${pct}% completado`;
+  document.getElementById('prog-fill').style.width=pct+'%';
+}
+
+// ══════════════════════════════════════════════════════════
+// RENDER QUESTION
+// ══════════════════════════════════════════════════════════
+function renderQuestion(){
+  const q=sessionQuestions[current];
+  const isAns=answered[current];
+  const letters=['A','B','C','D'];
+  const diffLabels={easy:'Básica',medium:'Intermedia',hard:'Análisis de caso'};
+
+  const caseHtml=q.case?`<div class="case-box">📋 <strong>Caso:</strong> ${q.case}</div>`:'';
+  const profeTag=q.profe?`<span class="q-profe">⭐ Del profe</span>`:'';
+
+  const optsHtml=q.opts.map((o,i)=>{
+    let cls='opt-btn';
+    if(isAns){
+      if(i===q.ans) cls+=' correct';
+      else if(i===answers[current]&&i!==q.ans) cls+=' wrong';
+    }
+    return `<button class="${cls}" ${isAns?'disabled':''} onclick="selectAnswer(${i})">
+      <span class="opt-letter">${letters[i]}</span><span>${o}</span>
+    </button>`;
+  }).join('');
+
+  let feedHtml='';
+  if(isAns){
+    const ok=answers[current]===q.ans;
+    feedHtml=`<div class="feedback ${ok?'correct-fb':'wrong-fb'} show">
+      <strong>${ok?'✓ ¡Correcto!':'✗ Incorrecto'}</strong>
+      ${!ok?`<span>Respuesta correcta: <strong>${q.opts[q.ans]}</strong></span><br>`:''}
+      <em>📖 ${q.exp}</em>
+    </div>`;
+  }
+
+  document.getElementById('question-area').innerHTML=`
+    <div class="q-card">
+      <div class="q-meta">
+        <span class="q-num">Pregunta ${current+1}</span>
+        <span class="q-unit">${q.unit}</span>
+        ${profeTag}
+        <span class="q-diff ${q.diff}">${diffLabels[q.diff]}</span>
+      </div>
+      ${caseHtml}
+      <div class="q-text">${q.q}</div>
+      <div class="options">${optsHtml}</div>
+      ${feedHtml}
+    </div>`;
+
+  document.getElementById('btn-prev').disabled=current===0;
+  const allDone=answered.every(Boolean);
+  if(current===sessionQuestions.length-1){
+    document.getElementById('btn-next').style.display='none';
+    document.getElementById('btn-finish').style.display=allDone?'inline-block':'none';
+  } else {
+    document.getElementById('btn-next').style.display='inline-block';
+    document.getElementById('btn-finish').style.display='none';
+    document.getElementById('btn-next').disabled=!isAns;
+  }
+  updateDots(); updateProgress();
+}
+
+function selectAnswer(idx){
+  if(answered[current]) return;
+  answers[current]=idx; answered[current]=true;
+  renderQuestion();
+  if(answered.every(Boolean)&&current===sessionQuestions.length-1)
+    document.getElementById('btn-finish').style.display='inline-block';
+}
+function nextQ(){ if(current<sessionQuestions.length-1){current++;renderQuestion();} }
+function prevQ(){ if(current>0){current--;renderQuestion();} }
+
+// ══════════════════════════════════════════════════════════
+// GRADE (escala 1.0–7.0, aprobatoria 60% = 4.0)
+// ══════════════════════════════════════════════════════════
+function calcGrade(pct){
+  if(pct<=0)  return 1.0;
+  if(pct<=60) return +(1.0+(pct/60)*3.0).toFixed(1);
+  return +(4.0+((pct-60)/40)*3.0).toFixed(1);
+}
+
+// ══════════════════════════════════════════════════════════
+// FINISH
+// ══════════════════════════════════════════════════════════
+function finishQuiz(){
+  const correct=answers.filter((a,i)=>a===sessionQuestions[i].ans).length;
+  const total=sessionQuestions.length;
+  const pct=Math.round((correct/total)*100);
+  const grade=calcGrade(pct);
+
+  let msg='';
+  if(grade>=6.5)      msg='🌟 ¡Excelente! Dominas completamente el contenido.';
+  else if(grade>=5.5) msg='✨ ¡Muy bien! Buen manejo de los temas.';
+  else if(grade>=4.0) msg='📚 Aprobado. Repasa los temas donde fallaste.';
+  else                msg='💡 Por debajo del mínimo. ¡Sigue practicando con este material!';
+
+  document.getElementById('res-grade').textContent=grade.toFixed(1);
+  document.getElementById('res-msg').textContent=msg;
+  document.getElementById('res-correct').textContent=correct;
+  document.getElementById('res-wrong').textContent=total-correct;
+  document.getElementById('res-pct').textContent=pct+'%';
+
+  let reviewHtml='<h3>Revisión de respuestas</h3>';
+  sessionQuestions.forEach((q,i)=>{
+    const ok=answers[i]===q.ans;
+    reviewHtml+=`<div class="review-item ${ok?'r-correct':'r-wrong'}">
+      <div class="review-q">${i+1}. ${q.profe?'⭐ ':''}${q.q}</div>
+      <div class="review-ans">${ok
+        ?`✅ Correcta: <em>${q.opts[q.ans]}</em>`
+        :`❌ Tu respuesta: <em>${answers[i]!==null?q.opts[answers[i]]:'Sin responder'}</em> · Correcta: <em>${q.opts[q.ans]}</em>`}
+      </div>
+      <div class="review-exp">📖 ${q.exp}</div>
+    </div>`;
+  });
+  document.getElementById('review-area').innerHTML=reviewHtml;
+
+  document.getElementById('screen-quiz').classList.remove('active');
+  document.getElementById('screen-result').classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function restartSame(){
+  document.getElementById('screen-result').classList.remove('active');
+  document.getElementById('screen-quiz').classList.add('active');
+  startQuiz();
+}
+function goHome(){
+  document.getElementById('screen-result').classList.remove('active');
+  document.getElementById('screen-start').classList.add('active');
+  document.getElementById('prog-label').textContent='—';
+  document.getElementById('prog-pct').textContent='—';
+  document.getElementById('prog-fill').style.width='0%';
+  updateInfoRow();
+  window.scrollTo(0,0);
+}
+
+// Init
+updateInfoRow();
+</script>
+<footer style="
+  margin-top: 3rem;
+  padding: 1.5rem 2rem;
+  background: linear-gradient(135deg, #e8dff8 0%, #f5e8f0 100%);
+  border-top: 1px solid var(--border, #e8dff0);
+  text-align: center;
+  font-family: 'DM Sans', sans-serif;
+">
+  <div style="max-width: 860px; margin: 0 auto;">
+    <p style="
+      font-size: 0.85rem;
+      color: #5a4e6a;
+      margin-bottom: 0.5rem;
+    ">
+      Material de estudio personal
+    </p>
+    <p style="
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #2a2230;
+      font-family: 'Lora', serif;
+    ">
+      Creado con dedicación por <span style="color: #8a6bb8;">[Valeska Ugarte]</span> · INACAP 2026
+    </p>
+    <p style="
+      font-size: 0.7rem;
+      color: #8a7e9a;
+      margin-top: 0.5rem;
+    ">
+      "La práctica constante es la clave del éxito"
+    </p>
+  </div>
+</footer>
+</body>
+</html>
